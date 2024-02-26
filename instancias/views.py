@@ -1,8 +1,21 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from suds.client import Client
+from django.contrib.auth import authenticate, login
 
+def inicio(request):
+    if request.method == 'POST':
+        username = request.POST.get('Usuario')
+        password = request.POST.get('Contraseña')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            # Usuario autenticado correctamente, redirigir a otra página
+            return redirect('inicio.html')  # Reemplaza 'nombre_de_la_vista' con el nombre de la vista a la que deseas redirigir
+        else:
+            # Usuario no autenticado, puedes agregar lógica para mostrar un mensaje de error
+            pass  # Opcional: agregar lógica para manejar un inicio de sesión fallido
 
-
+    return render(request, 'inicio.html')
 
 
 
