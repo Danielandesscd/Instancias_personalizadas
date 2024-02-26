@@ -1,10 +1,8 @@
 from django.shortcuts import render
 from suds.client import Client
 
-
-
-
-
+def inicio(request):
+    return render (request, 'inicio.html')
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
     url_servicio = 'https://ra.andesscd.com.co/test/WebService/soap-server_new.php?wsdl'

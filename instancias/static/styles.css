@@ -8,7 +8,7 @@
 
 #cont-principal{
     height: 500px;
-    background-color: #ffffff;
+    background-color: #fdfdfd;
     color: black;
     font-size: 20px;
     margin-top: 50px;
@@ -21,11 +21,11 @@ footer{
      
 }
 #logo{
-    margin-left: 200px;
+    margin-left: 5px;
 }
 #usuario{
-    border-radius: 5px;
+    border-radius: 10px;
 }
 #contraseña{
-    border-radius: 5px;
+    border-radius: 10px;
 }
