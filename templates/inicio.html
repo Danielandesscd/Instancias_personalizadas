@@ -6,6 +6,8 @@
     <link href="{% static 'styles.css' %}" rel="stylesheet">
     <link rel="icon" type="imagen" href="static/icono.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Agrega SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <title>Instancias</title>
@@ -13,33 +15,61 @@
 <body>
     <div id="cont-principal" class="container">  
         <img id="logo" src="https://www.andesscd.com.co/wp-content/uploads/2023/02/Firma.gif" alt="andesSCD" width="250" >  
-        <div class="container">
-            <div class="row">
-                <div class="col-1">
-                    <label for="usuario"><b>Usuario:</b></label>
-                </div>
-                <div class="col-2">
-                    <input id="usuario" type="text" name="Usuario">
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="row">
-                <div class="col-1">
-                    <label for="contraseña"><b>Contraseña:</b></label>
-                </div>
-                <div class="col-2">
-                    <input id="contraseña" type="password" name="Contraseña">
-                    <button id="btn-ingreso" type="button" class="btn btn-primary">Ingresar</button>
+        <form id="login-form" method="post"> <!-- Agregamos un ID al formulario -->
+            {% csrf_token %}
+            <div class="container">
+                <div class="row">
+                    <div class="col-1">
+                        <label for="usuario"><b>Usuario:</b></label>
+                    </div>
+                    <div class="col-2">
+                        <input id="usuario" type="text" name="usuario"> <!-- Cambiamos el name a "usuario" -->
+                    </div>
                 </div>
             </div>
-        </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-1">
+                        <label for="contraseña"><b>Contraseña:</b></label>
+                    </div>
+                    <div class="col-2">
+                        <input id="contraseña" type="password" name="contraseña"> <!-- Cambiamos el name a "contraseña" -->
+                        <button id="btn-ingreso" type="submit" class="btn btn-primary">Ingresar</button> <!-- Cambiamos el type a "submit" -->
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
     <footer>Carrera 27 No. 86 - 43 Bogotá, Colombia <br> PBX 7953430 -3816776 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
 
-
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <!-- Tu script personalizado para mostrar SweetAlert -->
+    <script>
+        // Espera a que el DOM esté completamente cargado
+        document.addEventListener("DOMContentLoaded", function() {
+            // Agrega un event listener para el submit del formulario
+            document.getElementById("login-form").addEventListener("submit", function(event) {
+                // Evita el envío del formulario por defecto
+                event.preventDefault();
+                // Obtiene los valores de usuario y contraseña
+                var usuario = document.getElementById("usuario").value;
+                var contraseña = document.getElementById("contraseña").value;
+                // Realiza la validación aquí (puedes usar AJAX para enviar los datos al servidor)
+                // En este ejemplo, simplemente mostramos un SweetAlert de demostración
+                if (usuario !== "usuario_valido" || contraseña !== "contraseña_valida") {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Verifica tus datos!',
+                        text: 'Usuario o contraseña incorrectos',
+                    });
+                } else {
+                    // Si los datos son válidos, envía el formulario
+                    this.submit();
+                }
+            });
+        });
+    </script>
     
 </body>
 </html>

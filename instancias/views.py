@@ -1,8 +1,27 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from suds.client import Client
+from django.contrib.auth import authenticate, login
 
 def inicio(request):
-    return render (request, 'inicio.html')
+    if request.method == 'POST':
+        username = request.POST.get('usuario')
+        password = request.POST.get('contraseña')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            # Usuario autenticado correctamente, redirigir a una página de inicio.
+            return redirect('instancia')
+        else:
+            # Usuario no autenticado, mostrar un mensaje de error o volver a renderizar el formulario.
+            return render(request, 'inicio.html', {'error': 'Usuario o contraseña incorrectos'})
+    else:
+        # Si no es una solicitud POST, simplemente renderiza el formulario de inicio de sesión.
+        return render(request, 'inicio.html')
+
+
+def instancia(request):
+    return render (request, 'instancia.html')
+
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
     url_servicio = 'https://ra.andesscd.com.co/test/WebService/soap-server_new.php?wsdl'
