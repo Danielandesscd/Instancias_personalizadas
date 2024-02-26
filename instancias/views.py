@@ -3,6 +3,7 @@ from suds.client import Client
 from django.contrib.auth import authenticate, login
 
 def inicio(request):
+
     if request.method == 'POST':
         username = request.POST.get('Usuario')
         password = request.POST.get('Contraseña')
@@ -17,6 +18,9 @@ def inicio(request):
 
     return render(request, 'inicio.html')
 
+
+
+    return render (request, 'inicio.html')
 
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):

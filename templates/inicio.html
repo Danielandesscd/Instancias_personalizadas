@@ -1,15 +1,17 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="styles.css">
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
+    <link rel="icon" type="imagen" href="static/icono.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>instancias</title>
+    <title>Instancias</title>
 </head>
 <body>
-    <div id="cont-principal" clas="container">  
+    <div id="cont-principal" class="container">  
         <img id="logo" src="https://www.andesscd.com.co/wp-content/uploads/2023/02/Firma.gif" alt="andesSCD" width="250" >  
         <form method="post"> <!-- Agregamos un formulario con method="post" -->
             {% csrf_token %}
