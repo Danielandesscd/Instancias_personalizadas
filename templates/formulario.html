@@ -11,48 +11,126 @@
 <body>
     <div class="container-fluid ">
         <div class="row">
-          <div class="col-md-6 offset-md-3">
-            <h2 class="mt-5">Formulario Creacion Instancia</h2> 
+          <div class="col-md-8 offset-md-2">
+            <h2 class="mt-5">Formulario Creación Instancia</h2> 
             <br>
             <form action="#" method="POST" enctype="multipart/form-data">
+                <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+                    <legend><b>Seleccione tipos de certificado</b></legend>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Persona Natural
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado Persona Jurídica 
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Pertenecia a Empresa
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado Profesional Titulado 
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Persona Natural Con RUT
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado facturación electrónica
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+                <br>
+                <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+                    <legend><b>Seleccione Operaciones De certificado</b></legend>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Consultar Certificado 
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Revocar Certificado  
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Cambiar Pin
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Reposición Certificado Pertenencia Empresa ó Rep. Legal
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+               <br>
+               <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+                <legend><b>Seleccione Operaciones De Firmado</b></legend>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            Firmar Documento
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            Verificar Firma  
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+            <br>
+            <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+                <legend><b>Seleccione Operaciones De Firmado</b></legend>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            Cambiar Tiempo OTP
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            Firmar con OTP 
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            Invalidar OTP  
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+            <br>
               <div class="form-group">
-                <label for="items"><b>Seleccione tipos de certificado</b></label>
-                <select multiple="multiple" class="form-control" id="items" name="items[]">
-                  <option>Certificado Persona Natural</option>
-                  <option>Certificado Persona Juridica</option>
-                  <option>Certificado Pertenecia a Empresa</option>
-                  <option>Certificado Profesional Titulado</option>
-                  <option>Certificado Persona Natural Con RUT</option>
-                  <option>Certificado facturación electrónica</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="items"><b>Seleccione Operaciones de certificado</b></label>
-                <select multiple="multiple" class="form-control" id="items" name="items[]">
-                  <option>Consultar Certificado</option>
-                  <option>Revocar Certificado</option>
-                  <option>Cambia Pin</option>
-                  <option>Reposicion Pertenencia a Empresa o Rep. Legal</option>
-                  <option>Descargar Certificadode Firma</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="items"><b>Seleccione Operaciones de Firmado</b></label>
-                <select multiple="multiple" class="form-control" id="items" name="items[]">
-                  <option>Firmar Documento</option>
-                  <option>Verificar Firma</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="items"><b>Seleccione Operaciones de OTP</b></label>
-                <select multiple="multiple" class="form-control" id="items" name="items[]">
-                  <option>Cambiar Tiempo de OTP</option>
-                  <option>Firmar con OTP</option>
-                  <option>Invalidar OTP</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="logo"><b>Cargar Logo de la empresa:</b></label>
+                <label for="logo"><b>Cargar Logo de la Empresa:</b></label>
                 <input type="file" class="form-control-file" id="logo" name="logo" accept="image/*">
               </div>
               <div class="form-group">
@@ -63,13 +141,24 @@
                 <label for="colorSecundario"><b>Color Secundario:</b></label>
                 <input type="color" class="form-control" id="colorSecundario" name="colorSecundario">
               </div>
+              <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
               <div class="form-group">
-                <label for="requiereContraseña"><b>¿Requiere contraseña de autenticación?</b></label>
-                <select class="form-control" id="requiereContraseña" name="requiereContraseña">
-                  <option value="si">Sí</option>
-                  <option value="no">No</option>
-                </select>
+                <label for="requiereContraseña"><b>¿Requiere Contraseña de Autenticación?</b></label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+                    <label class="form-check-label" for="flexRadioDefault1">
+                      Sí
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+                    <label class="form-check-label" for="flexRadioDefault2">
+                      no
+                    </label>
+                  </div>
               </div>
+            </fieldset>
+            <br>
               <button type="submit" class="btn btn-primary">Enviar</button>
             </form>
           </div>
