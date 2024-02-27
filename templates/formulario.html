@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid ">
+        <div class="row">
+          <div class="col-md-6 offset-md-3">
+            <h2 class="mt-5">Formulario Creacion Instancia</h2> 
+            <br>
+            <form action="#" method="POST" enctype="multipart/form-data">
+              <div class="form-group">
+                <label for="items"><b>Seleccione tipos de certificado</b></label>
+                <select multiple="multiple" class="form-control" id="items" name="items[]">
+                  <option>Certificado Persona Natural</option>
+                  <option>Certificado Persona Juridica</option>
+                  <option>Certificado Pertenecia a Empresa</option>
+                  <option>Certificado Profesional Titulado</option>
+                  <option>Certificado Persona Natural Con RUT</option>
+                  <option>Certificado facturación electrónica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="items"><b>Seleccione Operaciones de certificado</b></label>
+                <select multiple="multiple" class="form-control" id="items" name="items[]">
+                  <option>Consultar Certificado</option>
+                  <option>Revocar Certificado</option>
+                  <option>Cambia Pin</option>
+                  <option>Reposicion Pertenencia a Empresa o Rep. Legal</option>
+                  <option>Descargar Certificadode Firma</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="items"><b>Seleccione Operaciones de Firmado</b></label>
+                <select multiple="multiple" class="form-control" id="items" name="items[]">
+                  <option>Firmar Documento</option>
+                  <option>Verificar Firma</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="items"><b>Seleccione Operaciones de OTP</b></label>
+                <select multiple="multiple" class="form-control" id="items" name="items[]">
+                  <option>Cambiar Tiempo de OTP</option>
+                  <option>Firmar con OTP</option>
+                  <option>Invalidar OTP</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="logo"><b>Cargar Logo de la empresa:</b></label>
+                <input type="file" class="form-control-file" id="logo" name="logo" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label for="colorPrimario"><b>Color Primario:</b></label>
+                <input type="color" class="form-control" id="colorPrimario" name="colorPrimario">
+              </div>
+              <div class="form-group">
+                <label for="colorSecundario"><b>Color Secundario:</b></label>
+                <input type="color" class="form-control" id="colorSecundario" name="colorSecundario">
+              </div>
+              <div class="form-group">
+                <label for="requiereContraseña"><b>¿Requiere contraseña de autenticación?</b></label>
+                <select class="form-control" id="requiereContraseña" name="requiereContraseña">
+                  <option value="si">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Enviar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+
+<!-- Scripts de Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

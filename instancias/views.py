@@ -27,6 +27,9 @@ def home(request):
 def instancia(request):
     return render (request, 'instancia.html')
 
+def formulario_instancia(request):
+    return render(request, 'formulario.html')
+
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
     url_servicio = 'https://ra.andesscd.com.co/test/WebService/soap-server_new.php?wsdl'

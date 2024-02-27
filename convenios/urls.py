@@ -10,5 +10,5 @@ urlpatterns = [
 
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
-
+     path('formulario/', views.formulario_instancia, name='formulario')
 ]
