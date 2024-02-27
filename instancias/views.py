@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect
 from suds.client import Client
 from django.contrib.auth import authenticate, login
+from django.contrib import messages 
+
+
 
 def inicio(request):
     if request.method == 'POST':
@@ -17,7 +20,7 @@ def inicio(request):
     else:
         # Si no es una solicitud POST, simplemente renderiza el formulario de inicio de sesión.
         return render(request, 'inicio.html')
-
+        
 def home(request):
     return render (request, 'home.html')
 
