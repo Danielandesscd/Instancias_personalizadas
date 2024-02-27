@@ -10,7 +10,7 @@ def inicio(request):
         if user is not None:
             login(request, user)
             # Usuario autenticado correctamente, redirigir a una página de inicio.
-            return redirect('instancia')
+            return redirect('home')
         else:
             # Usuario no autenticado, mostrar un mensaje de error o volver a renderizar el formulario.
             return render(request, 'inicio.html', {'error': 'Usuario o contraseña incorrectos'})
@@ -18,9 +18,14 @@ def inicio(request):
         # Si no es una solicitud POST, simplemente renderiza el formulario de inicio de sesión.
         return render(request, 'inicio.html')
 
+def home(request):
+    return render (request, 'home.html')
 
 def instancia(request):
     return render (request, 'instancia.html')
+
+def formulario_instancia(request):
+    return render(request, 'formulario.html')
 
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
