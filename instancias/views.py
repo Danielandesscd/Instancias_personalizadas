@@ -12,15 +12,15 @@ def inicio(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Usuario autenticado correctamente, redirigir a una página de inicio.
+            
             return redirect('home')
         else:
-            # Usuario no autenticado, mostrar un mensaje de error o volver a renderizar el formulario.
+            
             return render(request, 'inicio.html', {'error': 'Usuario o contraseña incorrectos'})
     else:
-        # Si no es una solicitud POST, simplemente renderiza el formulario de inicio de sesión.
+
         return render(request, 'inicio.html')
-        
+
 def home(request):
     return render (request, 'home.html')
 
