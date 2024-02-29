@@ -12,63 +12,64 @@
     <title>Home</title>
     <form action="{% url 'cerrar_sesion' %}" method="post">
         {% csrf_token %}
-    <button type="submit">Cerrar sesión</button>
 
 </head>
 <body>
     <div id="cont-principal" class="container">  
+        <div class="d-flex justify-content-end align-items-start">
+            <a href="{% url 'cerrar_sesion' %}" class="btn btn-primary me-md-2">Cerrar Sesión</a>
+        </div>
         <img id="logo" src="https://www.andesscd.com.co/wp-content/uploads/2023/02/Firma.gif" alt="andesSCD" width="250" >  
         <div class="list-group container-flex"  >
             <div class="container">
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <a href="{% url 'formulario' %}" class="btn btn-primary me-md-2">Crear Instancia</a>
-                    <button id="actualizar" class="btn btn-primary" type="button">Actualizar Instancias</button>
                 </div>
             </div>
             <div class="container mt-3">
-                <a href="#" class="list-group-item list-group-item-action">
+                <ul class="list-group-item list-group-item-action">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Empresa 1</span>
                         <div class="dropdown">
-                            <a href="#" role="button" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <ul href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i>
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink1">
-                                <li><a class="dropdown-item" href="#">Editar</a></li>
-                                <li><a class="dropdown-item" href="#">Eliminar</a></li>
                             </ul>
-                        </div>
-                    </div>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span>Empresa 2</span>
-                        <div class="dropdown">
-                            <a href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-three-dots-vertical"></i>
-                            </a>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink2">
                                 <li><a class="dropdown-item" href="#">Editar</a></li>
                                 <li><a class="dropdown-item" href="#">Eliminar</a></li>
                             </ul>
                         </div>
                     </div>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
+                </ul>
+                
+                <ul class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Empresa 2</span>
+                        <div class="dropdown">
+                            <ul href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </ul>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink2">
+                                <li><a class="dropdown-item" href="#">Editar</a></li>
+                                <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </ul>
+                <ul href="#" class="list-group-item list-group-item-action">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Empresa 3</span>
                         <div class="dropdown">
-                            <a href="#" role="button" id="dropdownMenuLink3" data-bs-toggle="dropdown" aria-expanded="false">
+                            <ul href="#" role="button" id="dropdownMenuLink3" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-three-dots-vertical"></i>
-                            </a>
+                            </ul>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink3">
                                 <li><a class="dropdown-item" href="#">Editar</a></li>
                                 <li><a class="dropdown-item" href="#">Eliminar</a></li>
                             </ul>
                         </div>
                     </div>
-                </a>
-                <!-- Otros elementos de la lista -->
+                </ul>
             </div>
             
             

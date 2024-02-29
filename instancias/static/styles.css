@@ -36,3 +36,12 @@ footer{
 #actualizar{
     margin-bottom: 10px;
 }
+.list-group-item {
+    border: none;
+}
+
+
+.dropdown-menu {
+    border: none;
+    box-shadow: none;
+}
