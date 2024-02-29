@@ -40,14 +40,15 @@ class CONVENIO(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     logueo = models.BooleanField()
-    logo = models.CharField(max_length=100)
-    url = models.CharField(max_length=100)
+    logo = models.ImageField(upload_to='logos/', blank=True, null=True)
+    url = models.CharField(max_length=100, null=True)
     color_primario = models.CharField(max_length=100)
     color_secundario = models.CharField(max_length=100)
-    id_vigenica = models.IntegerField()
+    id_vigenica = models.IntegerField(max_length=100, null=True)
     banner = models.BooleanField()
-    usuario_weservice = models.CharField(max_length=100)
-    contraseña_webservice = models.CharField(max_length=100)
+    imagen_banner = models.ImageField(upload_to='banners/', blank=True, null=True)
+    usuario_weservice = models.CharField(max_length=100, null=True)
+    contraseña_webservice = models.CharField(max_length=100, null=True)
 
 
     

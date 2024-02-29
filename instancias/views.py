@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from suds.client import Client
 from django.contrib.auth import authenticate, login
 from django.contrib import messages 
-
+from .models import CONVENIO
 
 
 def inicio(request):
@@ -26,6 +26,40 @@ def home(request):
 
 def instancia(request):
     return render (request, 'instancia.html')
+
+
+def crear_instancia(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario
+        nombre = request.POST.get('nombre')
+        logueo = True if request.POST.get('flexRadioDefault1') == 'on' else False
+        logo = request.FILES['logo'] if 'logo' in request.FILES else None
+        url = request.POST.get('url')
+        color_primario = request.POST.get('colorPrimario')
+        color_secundario = request.POST.get('colorSecundario')
+        id_vigenica = request.POST.get('id_vigenica')
+        banner = True if request.POST.get('flexRadio') == 'on' else False
+        imagen_banner = request.FILES['imagenBanner'] if 'imagenBanner' in request.FILES else None
+        usuario_weservice = request.POST.get('usuario_weservice')
+        contraseña_webservice = request.POST.get('contraseña_webservice')
+
+        # Guardar los datos en la base de datos
+        convenio = CONVENIO(
+            nombre=nombre,
+            logueo=logueo,
+            logo=logo,
+            url=url,
+            color_primario=color_primario,
+            color_secundario=color_secundario,
+            id_vigenica=id_vigenica,
+            banner=banner,
+            imagen_banner=imagen_banner,
+            usuario_weservice=usuario_weservice,
+            contraseña_webservice=contraseña_webservice
+        )
+        convenio.save()
+        return redirect('home')
+    return render(request, 'home.html')
 
 def formulario_instancia(request):
     return render(request, 'formulario.html')
