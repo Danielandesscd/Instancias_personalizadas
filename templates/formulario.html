@@ -38,38 +38,63 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-      
-      var requiereContraseñaSi = document.getElementById("flexRadioDefault1");
-      var camposContraseña = document.querySelectorAll(".campos-contraseña");
+    var requiereContraseñaSi = document.getElementById("flexRadioDefault1");
+    var camposContraseña = document.querySelectorAll(".campos-contraseña");
+    var contraseñaInput = document.getElementById("contraseña");
+    var confirmarContraseñaInput = document.getElementById("confirmarContraseña");
+    var mensajeError = document.getElementById("mensajeError");
 
-      
-      requiereContraseñaSi.addEventListener("change", function() {
-          
-          if (requiereContraseñaSi.checked) {
-              camposContraseña.forEach(function(elemento) {
-                  elemento.style.display = "block";
-              });
-          } else {
-              camposContraseña.forEach(function(elemento) {
-                  elemento.style.display = "none";
-              });
-          }
-      });
+    requiereContraseñaSi.addEventListener("change", function() {
+        if (requiereContraseñaSi.checked) {
+            camposContraseña.forEach(function(elemento) {
+                elemento.style.display = "block";
+            });
+        } else {
+            camposContraseña.forEach(function(elemento) {
+                elemento.style.display = "none";
+            });
+        }
+    });
 
-      
-      var requiereContraseñaNo = document.getElementById("flexRadioDefault2");
+    var requiereContraseñaNo = document.getElementById("flexRadioDefault2");
 
-      
-      requiereContraseñaNo.addEventListener("change", function() {
-          
-          if (requiereContraseñaNo.checked) {
-              camposContraseña.forEach(function(elemento) {
-                  elemento.style.display = "none";
-              });
-          }
-      });
-  });
+    requiereContraseñaNo.addEventListener("change", function() {
+        if (requiereContraseñaNo.checked) {
+            camposContraseña.forEach(function(elemento) {
+                elemento.style.display = "none";
+            });
+            mensajeError.style.display = "none";
+        }
+    });
+
+    
+});
 </script>
+<script>
+    function checkPasswordMatch() {
+        var password = document.getElementById("contraseña").value;
+        var confirmPassword = document.getElementById("confirmarContraseña").value;
+        var errorMensaje = document.getElementById("mensajeError");
+
+        if (password !== confirmPassword) {
+            errorMensaje.style.display = "block";
+            return false; // No coinciden
+        } else {
+            errorMensaje.style.display = "none";
+            return true; // Coinciden
+        }
+    }
+
+    function submitForm() {
+        if (!checkPasswordMatch()) {
+            
+            return false;
+        }
+        
+        return true;
+    }
+</script>
+
 
 
 <body>
@@ -84,8 +109,8 @@
             <br>
             
             
-                <form action="{% url 'crear_instancia' %}" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
+            <form onsubmit="return submitForm()" action="{% url 'crear_instancia' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
                     <div class="mb-3">
                         <label for="nombre" class="form-label"><b>Razón Social:</b></label>
                         <input type="text" class="form-control" id="nombre" name="nombre">
@@ -100,10 +125,7 @@
                             </label>
                         </div>
 
-                        <div class="form-g" style="display: none;">
-                            <label for="nombre"><b>Nombre Cliente:</b></label>
-                            <input type="input" class="form-control" id="contraseña" name="contraseña">
-                        </div>
+                        
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
@@ -250,6 +272,7 @@
                 <label for="requiereContraseña"><b>¿Requiere Contraseña de Autenticación?</b></label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+
                     <label class="form-check-label" for="flexRadioDefault1">
                       Sí
                     </label>
@@ -263,15 +286,16 @@
               </div>
             </fieldset>
             <div class="form-group campos-contraseña" style="display: none;">
-              <label for="contraseña"><b>Contraseña:</b></label>
-              <input type="password" class="form-control" id="contraseña" name="contraseña">
-          </div>
-          <div class="form-group campos-contraseña" style="display: none;">
-              <label for="confirmarContraseña"><b>Confirmar Contraseña:</b></label>
-              <input type="password" class="form-control" id="confirmarContraseña" name="confirmarContraseña">
-          </div>
+                <label for="contraseña"><b>Contraseña:</b></label>
+                <input type="password" class="form-control" id="contraseña" name="contraseña">
+            </div>
+            <div class="form-group campos-contraseña" style="display: none;">
+                <label for="confirmarContraseña"><b>Confirmar Contraseña:</b></label>
+                <input type="password" class="form-control" id="confirmarContraseña" name="confirmarContraseña" onkeyup="checkPasswordMatch()">
+                <div id="mensajeError" style="display: none; color: red;">Las contraseñas no coinciden</div>
+            </div>
             <br>
-              <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="submit" class="btn btn-primary">Enviar</button>
             </form>
           </div>
         </div>

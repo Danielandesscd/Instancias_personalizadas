@@ -8,6 +8,30 @@
     <title>Datos Formulario</title>
 </head>
 <body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#departamento').change(function() {
+            $.ajax({
+                url: "{% url 'obtener_departamentos' %}",
+                type: 'GET',
+                success: function(response) {
+                    // Actualizar el campo de departamento con los datos recibidos
+                    $('#departamento').empty();
+                    $.each(response.departamentos, function(index, departamento) {
+                        $('#departamento').append($('<option>', {
+                            value: departamento.id_departamento,
+                            text: departamento.nombre
+                        }));
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al obtener departamentos:", error);
+                }
+            });
+        });
+    });
+</script>
     <div class="container-fluid">
         <div class="row">
             <div class="col-10 col-sm-8 col-md-8 col-lg-6 mx-auto">
@@ -70,7 +94,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="departamento" class="form-label"><b>Departamento</b></label>
-                        <input type="text" class="form-control" id="departamento" name="departamento">
+                        <select class="form-control" id="departamento" name="departamento">
+                            <!-- Iterar sobre la lista de departamentos y generar opciones -->
+                            {% for departamento in departamentos %}
+                                <option value="{{ departamento.id_departamento }}">{{ departamento.nombre }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="municipio" class="form-label"><b>Municipio</b></label>
