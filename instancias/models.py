@@ -44,9 +44,10 @@ class CONVENIO(models.Model):
     url = models.CharField(max_length=100, null=True)
     color_primario = models.CharField(max_length=100)
     color_secundario = models.CharField(max_length=100)
-    id_vigenica = models.IntegerField( null=True)
+    id_vigenica = models.IntegerField(null=True)
     banner = models.BooleanField()
     imagen_banner = models.ImageField(upload_to='banners/', blank=True, null=True)
+    contraseña_convenio = models.TextField(blank=True, null=True)
     usuario_weservice = models.CharField(max_length=100, null=True)
     contraseña_webservice = models.CharField(max_length=100, null=True)
 

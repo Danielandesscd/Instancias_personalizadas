@@ -1,8 +1,15 @@
+from http import client
 from django.shortcuts import render, redirect
 from suds.client import Client
 from django.contrib.auth import authenticate, login
 from django.contrib import messages 
 from .models import CONVENIO
+from django.contrib.auth.hashers import make_password
+from zeep import Client
+from zeep.transports import Transport
+from requests.auth import HTTPBasicAuth
+import json
+from zeep.wsse.username import UsernameToken
 
 
 def inicio(request):
@@ -24,13 +31,16 @@ def inicio(request):
 def home(request):
     return render (request, 'home.html')
 
+def campos_form(request):
+    return render(request,'campos-form.html')
+
 def instancia(request):
     return render (request, 'instancia.html')
 
 
 def crear_instancia(request):
     if request.method == 'POST':
-        # Obtener los datos del formulario
+        
         nombre = request.POST.get('nombre')
         logueo = True if request.POST.get('flexRadioDefault1') == 'on' else False
         logo = request.FILES['logo'] if 'logo' in request.FILES else None
@@ -39,11 +49,14 @@ def crear_instancia(request):
         color_secundario = request.POST.get('colorSecundario')
         id_vigenica = request.POST.get('id_vigenica')
         banner = True if request.POST.get('flexRadio') == 'on' else False
+        contraseña_convenio = request.POST.get('contraseña')
         imagen_banner = request.FILES['imagenBanner'] if 'imagenBanner' in request.FILES else None
         usuario_weservice = request.POST.get('usuario_weservice')
         contraseña_webservice = request.POST.get('contraseña_webservice')
+        
+        contraseña_convenio_encriptada = make_password(contraseña_convenio)
 
-        # Guardar los datos en la base de datos
+        
         convenio = CONVENIO(
             nombre=nombre,
             logueo=logueo,
@@ -54,15 +67,38 @@ def crear_instancia(request):
             id_vigenica=id_vigenica,
             banner=banner,
             imagen_banner=imagen_banner,
+            contraseña_convenio=contraseña_convenio_encriptada, 
             usuario_weservice=usuario_weservice,
             contraseña_webservice=contraseña_webservice
         )
+        
         convenio.save()
         return redirect('home')
     return render(request, 'home.html')
 
 def formulario_instancia(request):
     return render(request, 'formulario.html')
+
+
+
+def obtener_departamentos(request):
+    # Configurar las credenciales de autenticación
+    username = 'PAAN'
+    password = 'gN9F2uektn'
+
+    # Crear un cliente SOAP con el URL del servicio y las credenciales
+    client = Client('https://ra.andesscd.com.co/test/WebService/soap-server_new.php', wsse=UsernameToken(username, password))
+
+    # Hacer la solicitud SOAP
+    response = client.service.DepartamentoRequest(cadena='')
+
+    # Extraer los departamentos de la respuesta SOAP
+    departamentos = response.lista_departamentos
+
+    return render(request, 'campos-form.html', {'departamentos': departamentos})
+
+
+
 
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
