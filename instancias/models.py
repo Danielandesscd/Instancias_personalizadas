@@ -5,6 +5,8 @@ class DATOS(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
+    tipo_doc = models.CharField(max_length=100)
+    nuemro_doc = models.CharField(max_length=100)
     correo = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100)
     departamento = models.CharField(max_length=100)
@@ -57,7 +59,6 @@ class CONVENIO(models.Model):
 class TIPO_CERT(models.Model):
     id = models.AutoField(primary_key=True)
     nombre_cert = models.CharField(max_length=100)
-    id_formulario = models.IntegerField()
     id_convenio = models.IntegerField()
 
 
@@ -65,9 +66,7 @@ class TIPO_CERT(models.Model):
     
 class FORMATO_ENTREGA(models.Model):
     id = models.AutoField(primary_key=True)
-    token_virtual = models.CharField(max_length=100)
-    token_integer = models.CharField(max_length=100)
-    pkcs10 = models.CharField(max_length=100)
+    nombre_formato=models.CharField
     id_convenio = models.IntegerField()
 
     

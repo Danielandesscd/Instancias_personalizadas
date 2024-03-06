@@ -37,6 +37,11 @@ def campos_form(request):
 def instancia(request):
     return render (request, 'instancia.html')
 
+def certificado_perso_nat(request):
+    return render (request, 'form-pers-nat.html')
+
+def certificado_perso_jur(request):
+    return render (request, 'form-pers-jur.html')
 
 def crear_instancia(request):
     if request.method == 'POST':

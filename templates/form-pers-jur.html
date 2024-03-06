@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <title>Certificado Persona Jurídica</title>
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#departamento').change(function() {
+                $.ajax({
+                    url: "{% url 'obtener_departamentos' %}",
+                    type: 'GET',
+                    success: function(response) {
+                        // Actualizar el campo de departamento con los datos recibidos
+                        $('#departamento').empty();
+                        $.each(response.departamentos, function(index, departamento) {
+                            $('#departamento').append($('<option>', {
+                                value: departamento.id_departamento,
+                                text: departamento.nombre
+                            }));
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error al obtener departamentos:", error);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
+                    <h2 class="mb-0"><b> Solicitud Certificado Persona Jurídica</b></h2>
+                    <div class="mb-3">
+                    <form>
+                        <br>
+                            <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
+                            <select class="form-select" id="tipo-documento" name="tipo-documento">
+                                <option value="cc">CC</option>
+                                <option value="nit">CE</option>
+                                <option value="nit">NIT</option>
+                                <option value="pasaporte">Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="numero-documento" class="form-label"><b>Número de Documento</b></label>
+                            <input type="text" class="form-control" id="numero-documento" name="numero-documento">
+                        </div>
+                        <div class="mb-3">
+                            <label for="nombres" class="form-label"><b>Nombres</b></label>
+                            <input type="text" class="form-control" id="nombres" name="nombres">
+                        </div>
+                        <div class="mb-3">
+                            <label for="apellidos" class="form-label"><b>Apellidos</b></label>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos">
+                        </div>
+                        <div class="mb-3">
+                            <label for="departamento" class="form-label"><b>Departamento</b></label>
+                            <select class="form-control" id="departamento" name="departamento">
+                                <!-- Iterar sobre la lista de departamentos y generar opciones -->
+                                {% for departamento in departamentos %}
+                                    <option value="{{ departamento.id_departamento }}"></option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="municipio" class="form-label"><b>Municipio</b></label>
+                            <input type="text" class="form-control" id="municipio" name="municipio">
+                        </div>
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label"><b>Dirección</b></label>
+                            <input type="text" class="form-control" id="direccion" name="direccion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="numero-celular" class="form-label"><b>Número de Celular</b></label>
+                            <input type="text" class="form-control" id="numero-celular" name="numero-celular">
+                        </div>
+                        <div class="mb-3">
+                            <label for="correo" class="form-label"><b>Correo Electrónico</b></label>
+                            <input type="email" class="form-control" id="correo" name="correo">
+                        </div>
+                        <div class="mb-3">
+                            <label for="razon-social" class="form-label"><b>Razón Social</b></label>
+                            <input type="text" class="form-control" id="razon-social" name="razon-social">
+                        </div>
+                        <div class="mb-3">
+                            <label for="documento-entidad" class="form-label"><b>Documento de la Entidad</b></label>
+                            <input type="text" class="form-control" id="documento-entidad" name="documento-entidad">
+                        </div>
+                        <div class="mb-3">
+                            <label for="correo-entidad" class="form-label"><b>Correo Electrónico de la Entidad</b></label>
+                            <input type="email" class="form-control" id="correo-entidad" name="correo-entidad">
+                        </div>
+                        <div class="mb-3">
+                            <label for="departamento" class="form-label"><b>Departamento</b></label>
+                            <select class="form-control" id="departamento" name="departamento">
+                                <!-- Iterar sobre la lista de departamentos y generar opciones -->
+                                {% for departamento in departamentos %}
+                                    <option value="{{ departamento.id_departamento }}">{{ departamento.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="municipio" class="form-label"><b>Municipio</b></label>
+                            <input type="text" class="form-control" id="municipio" name="municipio">
+                        </div>
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label"><b>Dirección De La Entidad</b></label>
+                            <input type="text" class="form-control" id="direccion" name="direccion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha-certificado" class="form-label"><b>Fecha de Certificado</b></label>
+                            <input type="date" class="form-control" id="fecha-certificado" name="fecha-certificado">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="vigencia" class="form-label"><b>Vigencia</b></label>
+                            <select class="form-select" id="vigencia" name="vigencia">
+                                <option value="1-dia">1 Día</option>
+                                <option value="1-mes">1 Mes</option>
+                                <option value="3-meses">3 Meses</option>
+                                <option value="6-meses">6 Meses</option>
+                                <option value="1-ano">1 Año</option>
+                                <option value="2-anos">2 Años</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cargo" class="form-label"><b>Cargo en la Empresa</b></label>
+                            <input type="text" class="form-control" id="cargo" name="cargo">
+                        </div>
+                        <div class="mb-3">
+                            <label for="unidad-organizacional" class="form-label"><b>Unidad Organizacional</b></label>
+                            <input type="text" class="form-control" id="unidad-organizacional" name="unidad-organizacional">
+                        </div>
+                        <div class="mb-3">
+                            <label for="formato-entrega" class="form-label"><b>Formato de Entrega</b></label>
+                            <select class="form-select" id="formato-entrega" name="formato-entrega">
+                                <option value="pkcs10">PKCS10</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="documentos" class="form-label"><b>Documentos De Identidad</b></label>
+                            <input type="file" class="form-control" id="documentos" name="documentos" multiple>
+                        </div>
+                        <div class="mb-3">
+                            <label for="documentos" class="form-label"><b>Documentos RUT Facturador Electrónico</b></label>
+                            <input type="file" class="form-control" id="documentos" name="documentos" multiple>
+                        </div>
+                        <br>
+                        <button type="submit" class="btn btn-primary">Solicitar Certificado</button>
+                        <br>
+                    </form>
+                    <br>
+                </div>
+            </div>        
+        </div>
+    </div>   
+
+
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+              
+</body>
+</html>
