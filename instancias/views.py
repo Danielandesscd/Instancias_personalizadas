@@ -43,6 +43,21 @@ def certificado_perso_nat(request):
 def certificado_perso_jur(request):
     return render (request, 'form-pers-jur.html')
 
+def certificado_perso_nat_rut(request):
+    return render (request, 'form-per-nat-rut.html')
+
+def certificado_pert_emp(request):
+    return render (request, 'form-pert-emp.html')
+
+def certificado_prof_titu(request):
+    return render (request, 'form-prof-titu.html')
+
+def certificado_fact_pj(request):
+    return render (request, 'form-fe-pj.html')
+
+def certificado_fact_pn(request):
+    return render (request, 'form-fe-pn.html')
+
 def crear_instancia(request):
     if request.method == 'POST':
         
