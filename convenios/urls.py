@@ -22,4 +22,8 @@ urlpatterns = [
     path('certificado_prof_titu/', views.certificado_prof_titu, name='form-prof-titu'),
     path('certificado_fact_pj/', views.certificado_fact_pj, name='form-fe-pj'),
     path('certificado_fact_pn/', views.certificado_fact_pn, name='form-fe-pn'),
+    path('consultar/', views.consultar, name='consultar'),
+    path('revocar/', views.revocar, name='revocar'),
+    path('cambiar_pin/', views.cambiar_pin, name='cambiar_pin'),
+    path('firmar_doc/', views.firmar_doc, name='firmar_doc'),
 ]

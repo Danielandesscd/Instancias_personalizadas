@@ -24,20 +24,26 @@
             <div class="container">
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <a href="{% url 'formulario' %}" class="btn btn-primary me-md-2">Crear Instancia</a>
+                    <a href="{% url 'instancia' %}" class="btn btn-primary me-md-2">Ir a Instancia  de Prueba</a>
                 </div>
             </div>
             <div class="container mt-3">
                 <ul class="list-group-item list-group-item-action">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>Empresa 1</span>
-                        <div class="dropdown">
-                            <ul href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-three-dots-vertical"></i>
-                            </ul>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink2">
-                                <li><a class="dropdown-item" href="#">Editar</a></li>
-                                <li><a class="dropdown-item" href="#">Eliminar</a></li>
-                            </ul>
+                        <ul>
+                            {% for instancia in instancias %}
+                            <li>{{ instancia.nombre }}</li>
+                            {% endfor %}
+                            <div class="dropdown">
+                                <ul role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </ul>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink2">
+                                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                                </ul>
+                            </div>
+                        </ul>
                         </div>
                     </div>
                 </ul>

@@ -94,6 +94,16 @@
         return true;
     }
 </script>
+<script>
+    document.querySelector('form').addEventListener('submit', function(event) {
+        var nombreInput = document.getElementById('nombre');
+        if (nombreInput.value.trim() === '') {
+            event.preventDefault(); // Evita que se envíe el formulario si el nombre está vacío
+            alert('Por favor, ingresa un nombre.');
+            nombreInput.focus(); // Coloca el foco en el campo nombre para que el usuario lo complete
+        }
+    });
+</script>
 
 
 
@@ -110,12 +120,12 @@
             
             
 
-            <form onsubmit="return submitForm()" action="{% url 'crear_instancia' %}" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
+            <form method="POST" action="/crear_instancia/" enctype="multipart/form-data">
+                {% csrf_token %}
                 <fieldset style="border: 1px solid #bbbaba; padding: 10px;"> 
                     <legend><b>Razón Social</b></legend>  
                     <div class="form-group">
-                        <input type="text" class="form-control" id="nombre" name="nombre"> 
+                        <input type="text" class="form-control" id="nombre" name="nombre" required> 
                     </div>  
                 </fieldset>   
                 <br>
@@ -124,67 +134,67 @@
                     <legend><b>Seleccione tipos de certificado</b></legend>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado persona natural" value="form-pers-nat.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Persona Natural
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado persona Juridica" value="form-pers-jur.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Persona Jurídica 
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado Pertenecia Empresa" value="form-pert-emp.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Pertenecia a Empresa
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado  Comunidad Académica" value="form-com-acad.html" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Comunidada Académica
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado funcion Publica SIIF Nación" value="form-siif-nac.html" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Función Publica SIIF Nación
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado Profesional Titulado" value="form-prof-titu.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Profesional Titulado 
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado persona natural con rut" value="form-per-nat-rut.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Persona Natural Con RUT
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
-                            <label class="form-check-label" for="flexCheckChecked">
-                                Certificado Facturación Electrónica
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado fact. elec. persona Juridica" value="form-fe-pj.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Facturacion Electronica Persona JurÍdica
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado fact. elec. persona natural" value="form-fe-pn.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Facturacion Electronica Persona Natural 
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
-                            <label class="form-check-label" for="flexCheckChecked">
-                                Certificado Profesional Titulado
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado funcion Publica" value="form-func-pub.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Funcion Publica
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado Representante Legal" value="form-rep-leg.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Representante Legal
                             </label>
@@ -400,7 +410,7 @@
                 <div id="mensajeError" style="display: none; color: red;">Las contraseñas no coinciden</div>
             </div>
             <br>
-            <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="submit" class="btn btn-primary">Crear Instancia</button>
             </form>
           </div>
         </div>

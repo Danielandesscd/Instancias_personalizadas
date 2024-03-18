@@ -2,14 +2,19 @@ from http import client
 from django.shortcuts import render, redirect
 from suds.client import Client
 from django.contrib.auth import authenticate, login
-from django.contrib import messages 
-from .models import CONVENIO
+from django.contrib import messages
+from .models import CONVENIO, TIPO_CERT
 from django.contrib.auth.hashers import make_password
 from zeep import Client
 from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
 from zeep.wsse.username import UsernameToken
+from django.shortcuts import render, get_object_or_404
+
+
+
+
 
 
 def inicio(request):
@@ -27,9 +32,36 @@ def inicio(request):
     else:
 
         return render(request, 'inicio.html')
+    
+
+def listar_convenios(request):
+    convenios = CONVENIO.objects.all()
+    print(convenios)
+
+    return render(request, 'home.html', {'convenios': convenios})
+
+
+def detalle_convenio(request, convenio_id):
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    return render(request, 'plantilla_convenio.html', {'convenio': convenio})
+
+
+
 
 def home(request):
     return render (request, 'home.html')
+
+def consultar(request):
+    return render (request, 'consultar_cert.html')
+
+def revocar(request):
+    return render (request, 'revocar_cert.html')
+
+def cambiar_pin(request):
+    return render (request, 'cambiar_pin.html')
+
+def firmar_doc(request):
+    return render (request, 'firmar_documento.html')
 
 def campos_form(request):
     return render(request,'campos-form.html')
@@ -57,6 +89,27 @@ def certificado_fact_pj(request):
 
 def certificado_fact_pn(request):
     return render (request, 'form-fe-pn.html')
+
+
+def procesar_formulario_convenio(request):
+    if request.method == 'POST':
+        # Procesar el formulario para crear una nueva instancia de CONVENIO
+        convenio = CONVENIO(nombre=request.POST['nombre'])
+        convenio.save()
+        
+        # Obtener los certificados seleccionados del formulario
+        certificados_seleccionados_ids = request.POST.getlist('tipos_certificados')
+        
+        # Asociar los certificados seleccionados con el convenio creado
+        for certificado_id in certificados_seleccionados_ids:
+            TIPO_CERT = TIPO_CERT.objects.get(pk=certificado_id)
+            convenio.certificados_seleccionados.add(TIPO_CERT)
+        
+        return render(request, 'tu_template.html', {'convenio': convenio})
+    else:
+        return render(request, 'tu_formulario.html')
+
+
 
 def crear_instancia(request):
     if request.method == 'POST':

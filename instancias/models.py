@@ -36,8 +36,12 @@ class SOLICITUD_CERT(models.Model):
     valor = models.CharField(max_length=100)
 
 
-
     
+class TIPO_CERT(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre_cert = models.CharField(max_length=100)
+    id_convenio = models.IntegerField()
+
 class CONVENIO(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -52,17 +56,11 @@ class CONVENIO(models.Model):
     contraseña_convenio = models.TextField(blank=True, null=True)
     usuario_weservice = models.CharField(max_length=100, null=True)
     contraseña_webservice = models.CharField(max_length=100, null=True)
-
-
     
-    
-class TIPO_CERT(models.Model):
-    id = models.AutoField(primary_key=True)
-    nombre_cert = models.CharField(max_length=100)
-    id_convenio = models.IntegerField()
+    # Campo ManyToMany para los certificados seleccionados
+    certificados_seleccionados = models.ManyToManyField(TIPO_CERT, related_name='convenios')
 
 
-    
     
 class FORMATO_ENTREGA(models.Model):
     id = models.AutoField(primary_key=True)
