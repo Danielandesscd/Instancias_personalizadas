@@ -36,8 +36,29 @@ class SOLICITUD_CERT(models.Model):
     valor = models.CharField(max_length=100)
 
 
-
     
+class TIPO_CERT(models.Model):
+    id = models.AutoField(primary_key=True)
+    nombre_cert = models.CharField(max_length=100)
+    id_convenio = models.IntegerField()
+
+class TipoCertificado(models.Model):
+    nombre = models.CharField(max_length=100)
+
+class OperacionCertificado(models.Model):
+    nombre = models.CharField(max_length=100)
+
+class OperacionFirmado(models.Model):
+    nombre = models.CharField(max_length=100)
+
+class OperacionOTP(models.Model):
+    nombre = models.CharField(max_length=100)
+
+class VigenciaCertificado(models.Model):
+    duracion = models.CharField(max_length=100)
+
+class FormatoEntrega(models.Model):
+    nombre = models.CharField(max_length=100)
 class CONVENIO(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -52,17 +73,17 @@ class CONVENIO(models.Model):
     contraseña_convenio = models.TextField(blank=True, null=True)
     usuario_weservice = models.CharField(max_length=100, null=True)
     contraseña_webservice = models.CharField(max_length=100, null=True)
-
-
     
+    tipos_certificado = models.ManyToManyField(TipoCertificado, related_name='convenios')
+    operaciones_certificado = models.ManyToManyField(OperacionCertificado, related_name='convenios')
+    operaciones_firmado = models.ManyToManyField(OperacionFirmado, related_name='convenios')
+    operaciones_otp = models.ManyToManyField(OperacionOTP, related_name='convenios')
+    vigencias_certificado = models.ManyToManyField(VigenciaCertificado, related_name='convenios')
+    formatos_entrega = models.ManyToManyField(FormatoEntrega, related_name='convenios')
     
-class TIPO_CERT(models.Model):
-    id = models.AutoField(primary_key=True)
-    nombre_cert = models.CharField(max_length=100)
-    id_convenio = models.IntegerField()
+    certificados_seleccionados = models.ManyToManyField(TIPO_CERT, related_name='convenios')
 
 
-    
     
 class FORMATO_ENTREGA(models.Model):
     id = models.AutoField(primary_key=True)
