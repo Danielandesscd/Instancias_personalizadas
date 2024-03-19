@@ -8,6 +8,34 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('convenioForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita que el formulario se envíe de forma predeterminada
+    
+            var formData = {};
+            // Obtener el estado de cada checkbox y almacenar los valores en formData
+            document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+                formData[checkbox.value] = checkbox.checked;
+            });
+    
+            // Enviar formData al backend usando fetch o AJAX
+            fetch('/guardar_convenios/', {
+                method: 'POST',
+                body: JSON.stringify(formData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                // Manejar la respuesta del servidor si es necesario
+                console.log(response);
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+    </script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         
@@ -109,55 +137,89 @@
             <br>
             
             
-            <form onsubmit="return submitForm()" action="{% url 'crear_instancia' %}" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label"><b>Razón Social:</b></label>
-                        <input type="text" class="form-control" id="nombre" name="nombre">
-                    </div>
+
+            <form onsubmit="return submitForm()" action="{% url 'crear_instancia' %}" method="POST" enctype="multipart/form-data" id="convenioForm">
+                    {% csrf_token %}
+                <fieldset style="border: 1px solid #bbbaba; padding: 10px;"> 
+                    <legend><b>Razón Social</b></legend>  
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="nombre" name="nombre"> 
+                    </div>  
+                </fieldset>   
+                <br>
+
                 <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
                     <legend><b>Seleccione tipos de certificado</b></legend>
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado persona natural" value="form-pers-nat.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Persona Natural
                             </label>
                         </div>
-
-                        
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado persona Juridica" value="form-pers-jur.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Persona Jurídica 
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado Pertenecia Empresa" value="form-pert-emp.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Pertenecia a Empresa
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado  Comunidad Académica" value="form-com-acad.html" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Comunidada Académica
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado funcion Publica SIIF Nación" value="form-siif-nac.html" id="flexCheckDefault">
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Certificado Función Publica SIIF Nación
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado Profesional Titulado" value="form-prof-titu.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
                                 Certificado Profesional Titulado 
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                            <input class="form-check-input" type="checkbox" name="certificado persona natural con rut" value="form-per-nat-rut.html" id="flexCheckDefault">
                             <label class="form-check-label" for="flexCheckDefault">
                                 Certificado Persona Natural Con RUT
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                            <input class="form-check-input" type="checkbox" name="certificado fact. elec. persona Juridica" value="form-fe-pj.html" id="flexCheckChecked" checked>
                             <label class="form-check-label" for="flexCheckChecked">
-                                Certificado facturación electrónica
+                                Certificado Facturacion Electronica Persona JurÍdica
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado fact. elec. persona natural" value="form-fe-pn.html" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado Facturacion Electronica Persona Natural 
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado funcion Publica" value="form-func-pub.html" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado Funcion Publica
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="certificado Representante Legal" value="form-rep-leg.html" id="flexCheckChecked" checked>
+                            <label class="form-check-label" for="flexCheckChecked">
+                                Certificado Representante Legal
                             </label>
                         </div>
                     </div>
                 </fieldset>
+                <br>
                 <br>
                 <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
                     <legend><b>Seleccione Operaciones De certificado</b></legend>
@@ -208,7 +270,7 @@
             </fieldset>
             <br>
             <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
-                <legend><b>Seleccione Operaciones De Firmado</b></legend>
+                <legend><b>Seleccione Operaciones De OTP</b></legend>
                 <div class="form-group">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
@@ -226,6 +288,78 @@
                         <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
                         <label class="form-check-label" for="flexCheckChecked">
                             Invalidar OTP  
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+            <br>
+            <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+            <legend><b>Seleccione Vigencia Del Certificado</b></legend>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            1 Día
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            1 Mes  
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            3 Meses
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            6 Meses  
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            1 Año
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            18 Meses  
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            2 Años
+                        </label>
+                    </div>
+                </div>
+            </fieldset>
+            <br>
+            <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
+                <legend><b>Seleccione Formato De Entrega</b></legend>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            Token Virtual
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            Token Físico  
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" checked>
+                        <label class="form-check-label" for="flexCheckChecked">
+                            PKCS10  
                         </label>
                     </div>
                 </div>

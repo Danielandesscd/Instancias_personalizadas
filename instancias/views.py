@@ -9,6 +9,18 @@ from zeep import Client
 from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
+from django.http import JsonResponse
+
+from django.views.decorators.csrf import csrf_exempt
+
+import requests
+from requests import Session
+
+import xml.etree.ElementTree as ET
+import base64
+from zeep import Client, Transport
+from zeep.exceptions import TransportError, XMLSyntaxError
+
 from zeep.wsse.username import UsernameToken
 
 
@@ -31,19 +43,38 @@ def inicio(request):
 def home(request):
     return render (request, 'home.html')
 
-def campos_form(request):
-    return render(request,'campos-form.html')
+
 
 def instancia(request):
     return render (request, 'instancia.html')
 
+@csrf_exempt
+def guardar_convenios(request):
+    if request.method == 'POST':
+        data = request.POST.dict()
 
+        # Obtener los IDs de los certificados seleccionados
+        certificados_seleccionados = [key for key, value in data.items() if value == 'on']
+
+        # Convertir la lista de IDs en una cadena separada por comas
+        certificados_permi = ','.join(certificados_seleccionados)
+
+        # Crear una nueva instancia de Convenio y guardarla en la base de datos
+        convenio = CONVENIO(certificados_permi=certificados_permi)
+        convenio.save()
+
+        return JsonResponse({'message': 'Convenios guardados correctamente.'})
+
+    return JsonResponse({'error': 'Se esperaba una solicitud POST.'}, status=400)
+
+@csrf_exempt
 def crear_instancia(request):
     if request.method == 'POST':
         
         nombre = request.POST.get('nombre')
         logueo = True if request.POST.get('flexRadioDefault1') == 'on' else False
         logo = request.FILES['logo'] if 'logo' in request.FILES else None
+        certificados_seleccionados = request.POST.getlist('flexCheckDefault') + request.POST.getlist('flexCheckChecked')
         url = request.POST.get('url')
         color_primario = request.POST.get('colorPrimario')
         color_secundario = request.POST.get('colorSecundario')
@@ -55,12 +86,13 @@ def crear_instancia(request):
         contraseña_webservice = request.POST.get('contraseña_webservice')
         
         contraseña_convenio_encriptada = make_password(contraseña_convenio)
-
+        print("IDs de los certificados seleccionados:", certificados_seleccionados)
         
         convenio = CONVENIO(
             nombre=nombre,
             logueo=logueo,
             logo=logo,
+            certificados_permi=certificados_seleccionados,
             url=url,
             color_primario=color_primario,
             color_secundario=color_secundario,
@@ -79,24 +111,44 @@ def crear_instancia(request):
 def formulario_instancia(request):
     return render(request, 'formulario.html')
 
-
-
-def obtener_departamentos(request):
-    # Configurar las credenciales de autenticación
-    username = 'PAAN'
-    password = 'gN9F2uektn'
-
-    # Crear un cliente SOAP con el URL del servicio y las credenciales
-    client = Client('https://ra.andesscd.com.co/test/WebService/soap-server_new.php', wsse=UsernameToken(username, password))
-
-    # Hacer la solicitud SOAP
-    response = client.service.DepartamentoRequest(cadena='')
-
-    # Extraer los departamentos de la respuesta SOAP
-    departamentos = response.lista_departamentos
-
+def campos_form(request):
+    departamentos = obtener_departamentos(request)
+    print(departamentos)  # Imprimirá los departamentos en la terminal
     return render(request, 'campos-form.html', {'departamentos': departamentos})
 
+def obtener_departamentos(request):
+    url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+
+    payload = """<soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713"><wsse:Username>PAAN</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">WEJdNHmFGnOeCnqNc/vIXRyJafs=</wsse:Password><wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">+fJQ1IEmt2xbAZooSaCNew==</wsse:Nonce><wsu:Created>2024-03-14T13:12:42.268Z</wsu:Created></wsse:UsernameToken></wsse:Security></soapenv:Header>
+       <soapenv:Body>
+          <and:DepartamentoRequest>
+             <and:cadena/>
+          </and:DepartamentoRequest>
+       </soapenv:Body>
+    </soapenv:Envelope>"""
+
+    headers = {
+        'Content-Type': 'text/xml',
+        'Authorization': 'Basic UEFBTjpnTjlGMnVla3Ru'
+    }
+
+    response = requests.post(url, headers=headers, data=payload)
+
+    if response.status_code == 200:
+        # Parsear la respuesta XML
+        root = ET.fromstring(response.content)
+        namespaces = {'and': 'http://www.andesscd.com.co/'}
+        # Encontrar los elementos que contienen los nombres de los departamentos
+        departamentos = root.findall('.//and:Departamento', namespaces)
+        nombres_departamentos = [departamento.find('and:nombre', namespaces).text for departamento in departamentos]
+        
+        # Devolver la lista de nombres de departamentos como respuesta JSON
+        return JsonResponse({'departamentos': nombres_departamentos})
+
+    else:
+        # Si la solicitud falla, devolver un mensaje de error
+        return JsonResponse({'error': 'No se pudo obtener la lista de departamentos'})
 
 
 
