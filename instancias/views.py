@@ -146,28 +146,82 @@ def guardar_convenios(request):
 @csrf_exempt
 def crear_instancia(request):
     if request.method == 'POST':
-        
         nombre = request.POST.get('nombre')
-        logo = request.FILES['logo'] if 'logo' in request.FILES else None
-        certificados_seleccionados = request.POST.getlist('flexCheckDefault') + request.POST.getlist('flexCheckChecked')
+        logo = request.FILES.get('logo')
         url = request.POST.get('url')
         color_primario = request.POST.get('colorPrimario')
         color_secundario = request.POST.get('colorSecundario')
         id_vigenica = request.POST.get('id_vigenica')
-        contraseña_convenio = request.POST.get('contraseña')
-        imagen_banner = request.FILES['imagenBanner'] if 'imagenBanner' in request.FILES else None
+        imagen_banner = request.FILES.get('imagenBanner')
         usuario_weservice = request.POST.get('usuario_weservice')
         contraseña_webservice = request.POST.get('contraseña_webservice')
-        
+        contraseña_convenio = request.POST.get('contraseña')
+
         contraseña_convenio_encriptada = make_password(contraseña_convenio)
-        
+        print("Contenido de request.POST:", request.POST)
+
         # Obtener los certificados seleccionados
-        certificados_seleccionados = request.POST.getlist('certificados_seleccionados')
-        certificados = []
-        for cert_id in certificados_seleccionados:
-            cert = TIPO_CERT.objects.get(id=int(cert_id))
-            certificados.append(cert)
+        certificado_persona_natural = request.POST.get('certificado_persona_natural')
+        certificado_persona_juridica = request.POST.get('certificado_persona_juridica')
+        certificado_pertenencia_empresa = request.POST.get('certificado_pertenencia_empresa')
+        certificado_Comunidada_Académica = request.POST.get('certificado_Comunidada_Académica')
+        certificado_Función_Publica_SIIF_Nación = request.POST.get('certificado_Función_Publica_SIIF_Nación')
+        certificado_Profesional_Titulado  = request.POST.get('certificado_Profesional_Titulado ')
+        certificado_Persona_Natural_Con_RUT = request.POST.get('certificado_Persona_Natural_Con_RUT')
+        certificado_Facturacion_Electronica_Persona_JurÍdica = request.POST.get('certificado_Facturacion_Electronica_Persona_JurÍdica')
+        certificado_Facturacion_Electronica_Persona_Natural = request.POST.get('certificado_Facturacion_Electronica_Persona_Natural')
+        certificado_Funcion_Publica = request.POST.get('certificado_Funcion_Publica')
+        certificado_Representante_Legal = request.POST.get('certificado_Representante_Legal')
+
+        # Obtener las operaciones de certificado seleccionadas
+        consultar_certificado = request.POST.get('consultar_certificado')
+        revocar_certificado = request.POST.get('revocar_certificado')
+        cambiar_pin = request.POST.get('cambiar_pin')
+        reposicion_certificado = request.POST.get('reposicion_certificado')
         
+        # Obtener las operaciones de firmado seleccionadas
+        firmar_documento = request.POST.get('firmar_documento')
+        verificar_firma = request.POST.get('verificar_firma')
+        
+        # Obtener las operaciones de OTP seleccionadas
+        cambiar_otp = request.POST.get('cambiar_otp')
+        firmar_con_otp = request.POST.get('firmar_con_otp')
+        invalidar_otp = request.POST.get('invalidar_otp')
+        
+        # Obtener las vigencias del certificado seleccionadas
+        vigencia_1_dia = request.POST.get('vigencia_1_dia')
+        vigencia_1_mes = request.POST.get('vigencia_1_mes')
+        vigencia_3_meses = request.POST.get('vigencia_3_meses')
+        vigencia_6_meses = request.POST.get('vigencia_6_meses')
+        vigencia_1_ano = request.POST.get('vigencia_1_ano')
+        vigencia_18_meses = request.POST.get('vigencia_18_meses')
+        vigencia_2_anos = request.POST.get('vigencia_2_anos')
+        
+        # Obtener los formatos de entrega seleccionados
+        token_virtual = request.POST.get('token_virtual')
+        token_fisico = request.POST.get('token_fisico')
+        pkcs10 = request.POST.get('pkcs10')
+
+
+
+        # Concatenar los valores de los certificados
+        certificados_permi = ','.join(filter(None, [ certificado_Representante_Legal,certificado_Funcion_Publica ,certificado_Funcion_Publica,certificado_Facturacion_Electronica_Persona_JurÍdica,certificado_Facturacion_Electronica_Persona_Natural,certificado_Persona_Natural_Con_RUT,certificado_Profesional_Titulado ,certificado_Función_Publica_SIIF_Nación,certificado_Comunidada_Académica,certificado_persona_natural, certificado_persona_juridica, certificado_pertenencia_empresa]))
+        print("Certificados permiso:", certificados_permi)  # Imprimir en la terminal
+        # Concatenar los valores de las operaciones de certificado
+        o_cert_permi = ','.join(filter(None, [consultar_certificado, revocar_certificado, cambiar_pin, reposicion_certificado]))
+        
+        # Concatenar los valores de las operaciones de firmado
+        o_firmado_permi = ','.join(filter(None, [firmar_documento, verificar_firma]))
+        
+        # Concatenar los valores de las operaciones de OTP
+        o_otp_permi = ','.join(filter(None, [cambiar_otp, firmar_con_otp, invalidar_otp]))
+        
+        # Concatenar los valores de las vigencias del certificado
+        vigencias_permi = ','.join(filter(None, [vigencia_1_dia, vigencia_1_mes, vigencia_3_meses, vigencia_6_meses, vigencia_1_ano, vigencia_18_meses, vigencia_2_anos]))
+        
+        # Concatenar los valores de los formatos de entrega
+        formatos_entrega_permi = ','.join(filter(None, [token_virtual, token_fisico, pkcs10]))
+
         convenio = CONVENIO.objects.create(
             nombre=nombre,
             logo=logo,
@@ -176,14 +230,17 @@ def crear_instancia(request):
             color_secundario=color_secundario,
             id_vigenica=id_vigenica,
             imagen_banner=imagen_banner,
-            contraseña_convenio=contraseña_convenio_encriptada, 
+            contraseña_convenio=contraseña_convenio_encriptada,
             usuario_weservice=usuario_weservice,
-            contraseña_webservice=contraseña_webservice
+            contraseña_webservice=contraseña_webservice,
+            certificados_permi=certificados_permi,
+            o_cert_permi=o_cert_permi,
+            o_firmado_permi=o_firmado_permi,
+            o_otp_permi=o_otp_permi,
+            vigencias_permi=vigencias_permi,
+            formatos_entrega_permi=formatos_entrega_permi,
         )
-        
-        # Asociar los certificados seleccionados con el convenio
-        convenio.certificados_seleccionados.add(*certificados)
-        
+
         convenio.save()
         return redirect('home')
     return render(request, 'home.html')

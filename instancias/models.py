@@ -57,13 +57,19 @@ class OperacionOTP(models.Model):
 class VigenciaCertificado(models.Model):
     duracion = models.CharField(max_length=100)
 
+
 class FormatoEntrega(models.Model):
     nombre = models.CharField(max_length=100)
 class CONVENIO(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True)
-    certificados_permi = models.CharField(max_length=100)    
+    certificados_permi = models.CharField(max_length=100) 
+    o_cert_permi = models.CharField(max_length=100)    
+    o_firmado_permi = models.CharField(max_length=100)    
+    o_otp_permi = models.CharField(max_length=100)    
+    vigencias_permi = models.CharField(max_length=100)    
+    formatos_entrega_permi = models.CharField(max_length=100)    
     url = models.CharField(max_length=100, null=True)
     color_primario = models.CharField(max_length=100)
     color_secundario = models.CharField(max_length=100)
