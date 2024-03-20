@@ -47,7 +47,7 @@ def inicio(request):
     
 
 def listar_convenios(request):
-    convenios = CONVENIO.objects.all()
+    convenios = CONVENIO.where(CONVENIO.nombre)
     print(convenios)
 
     return render(request, 'home.html', {'convenios': convenios})
