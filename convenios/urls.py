@@ -4,10 +4,12 @@ from instancias import views
 from django.contrib.auth import views as auth_views
 
 
+
 from instancias import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
+    
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
     path('campos_form', views.campos_form, name='campos_form'),

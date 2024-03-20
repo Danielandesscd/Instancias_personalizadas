@@ -10,6 +10,7 @@ from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
 from django.http import JsonResponse
+from django.utils.encoding import force_str
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -23,8 +24,6 @@ from zeep.exceptions import TransportError, XMLSyntaxError
 
 from zeep.wsse.username import UsernameToken
 from django.shortcuts import render, get_object_or_404
-
-
 
 
 
@@ -46,11 +45,7 @@ def inicio(request):
         return render(request, 'inicio.html')
     
 
-def listar_convenios(request):
-    convenios = CONVENIO.objects.all()
-    print(convenios)
 
-    return render(request, 'home.html', {'convenios': convenios})
 
 
 def detalle_convenio(request, convenio_id):
@@ -59,9 +54,11 @@ def detalle_convenio(request, convenio_id):
 
 
 
-
 def home(request):
-    return render (request, 'home.html')
+    convenios = CONVENIO.objects.all().values_list('nombre', flat=True)
+    convenios_text = [force_str(nombre) for nombre in convenios]
+    print("convenios:", convenios_text)  
+    return render(request, 'home.html', {'convenios': convenios_text})
 
 def consultar(request):
     return render (request, 'consultar_cert.html')
