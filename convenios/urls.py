@@ -2,12 +2,15 @@ from django.contrib import admin
 from django.urls import path
 from instancias import views
 from django.contrib.auth import views as auth_views
-
-
 from instancias import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
+    
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
     path('campos_form', views.campos_form, name='campos_form'),
@@ -27,4 +30,9 @@ urlpatterns = [
     path('revocar/', views.revocar, name='revocar'),
     path('cambiar_pin/', views.cambiar_pin, name='cambiar_pin'),
     path('firmar_doc/', views.firmar_doc, name='firmar_doc'),
+    path('plantilla_dinamica/<int:convenio_id>/', views.plantilla_dinamica, name='detalle_convenio'),
+
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

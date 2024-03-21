@@ -10,18 +10,18 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-  <label for="logueo">Logueo:</label>
+  <label for="logueo"></label>
         <input type="checkbox" id="logueo" name="logueo" {% if convenio.logueo %} checked {% endif %}>
         <br>
 
 
-<div id="cont-principal" class="container">  
+<div id="cont-principal" class="container"> 
   <div class="container">
     <div class="d-flex justify-content-end mt-5">
         <a href="{% url 'home' %}" class="btn btn-primary">Atrás</a>
     </div>
 </div>
-    <img id="logo" src="{{ convenio.logo.url }}" alt="{{ convenio.nombre }} logo" width="250" >
+<img id="logo" src="{{ convenio.logo.url }}" alt="{{ convenio.nombre }} logo" width="250">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand">{{ convenio.nombre }}</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,16 +30,18 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="#"> Inicio <span class="sr-only">(current)</span></a>
-        </li>
+        
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Solicitud De Certificado
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          {{convenio.certificados_permi}}
-          </div>
+            <ul>
+                {% for certificado, formulario in certificados_con_formularios %}
+                    <li><a href="{% url formulario %}">{{ certificado }}</a></li>
+                {% endfor %}
+          </ul>
+        </div>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

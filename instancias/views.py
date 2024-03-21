@@ -10,6 +10,7 @@ from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
 from django.http import JsonResponse
+from django.utils.encoding import force_str
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -23,10 +24,6 @@ from zeep.exceptions import TransportError, XMLSyntaxError
 
 from zeep.wsse.username import UsernameToken
 from django.shortcuts import render, get_object_or_404
-
-
-
-
 
 
 def inicio(request):
@@ -46,22 +43,64 @@ def inicio(request):
         return render(request, 'inicio.html')
     
 
-def listar_convenios(request):
-    convenios = CONVENIO.where(CONVENIO.nombre)
-    print(convenios)
-
-    return render(request, 'home.html', {'convenios': convenios})
-
-
-def detalle_convenio(request, convenio_id):
-    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
-    return render(request, 'plantilla_convenio.html', {'convenio': convenio})
-
-
 
 
 def home(request):
-    return render (request, 'home.html')
+    convenios = CONVENIO.objects.all().values_list('nombre', flat=True)
+    convenios_text = [force_str(nombre) for nombre in convenios]
+    print("convenios:", convenios_text)  
+    return render(request, 'home.html', {'convenios': convenios_text})
+
+
+
+
+
+def plantilla_dinamica(request, convenio_id):
+    mapeo_tipos_certificado = {
+    "10": "Facturación Electrónica - Persona Jurídica",
+    "11": "Facturación Electrónica - Persona Natural",
+    "6": "Comunidad Académica",
+    "9": "Pertenencia Empresa",
+    "7": "Profesional Titulado",
+    "8": "Representante Legal",
+    "12": "Función Pública",
+    "13": "Persona Jurídica",
+    "14": "Función Pública para SIIF Nación",
+    "5": "Persona Natural",
+    "15": "Persona Natural Para Actividad Comercial(Rut)"
+}
+    
+    mapeo_certificados_formularios = {
+        "10": 'form-fe-pj',
+        "11": 'form-fe-pn',
+        #"6": 'form-com-acad.html',
+        "9": 'form-pert-emp',
+        "7": 'form-prof-titu',
+        #"8": 'form-rep-legal.html',
+        #"12": 'form-func-pub.html',
+        "13": 'form-pers-jur',
+        #"14": 'form-func-pub-nacion.html',
+        "5": 'form-pers-nat',
+        "15": 'form-pers-nat-rut'
+    }
+
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
+
+    # Mapea los números a los nombres de los certificados
+    certificados = [mapeo_tipos_certificado.get(numero) for numero in numeros_certificados]
+    
+    # Para cada certificado, obtener la ruta del formulario asociado
+    formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
+    print("formularios: ", formularios)
+    # Combina certificados y formularios en una lista de tuplas
+    certificados_con_formularios = zip(certificados, formularios)
+
+    return render(request, 'plantilla_convenio.html', {'convenio': convenio, 'certificados_con_formularios': certificados_con_formularios})
+
+
+
+
 
 def consultar(request):
     return render (request, 'consultar_cert.html')
@@ -342,7 +381,3 @@ def solicitud_vinculacion_empresa(tipo_cert, tipo_doc, documento, nombres, apell
     client = Client(url_servicio)
     resultado = client.service.CertificateVinculacionEmpresaRequest(tipoCert=tipo_cert, tipoDoc=tipo_doc, documento=documento, nombres=nombres, apellidos=apellidos, municipio=municipio, direccion=direccion, email=email, emailEnt=email_ent, telefono=telefono, celular=celular, ocupacion=ocupacion, tipoDocEnt=tipo_doc_ent, documentoEnt=documento_ent, razonsocial=razonsocial, municipioEnt=municipio_ent, direccionEnt=direccion_ent, cargo=cargo, unidadOrganizacional=unidad_organizacional, fechaCert=fecha_cert, formato=formato, vigenciaCert=vigencia_cert, testigo=testigo, foto=foto, pin=pin, pkcs10=pkcs10, soporte=soporte, verific_doc=verific_doc, plantillaHuella=plantilla_huella, token_andesid=token_andesid)
     return resultado
-
-
-
-
