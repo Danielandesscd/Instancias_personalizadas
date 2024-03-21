@@ -84,6 +84,30 @@ def plantilla_dinamica(request, convenio_id):
         "15": 'form-pers-nat-rut'
     }
 
+    mapeo_operacion_cert = {
+        "1" : 'consultar',
+        "2" : 'revocar',
+        "3" : 'cambiar_pin',
+        #"4" : 'reposicion'
+
+    }
+
+    mapeo_operaciones_firmado = {
+        "1" : 'firmar_doc',
+        #"2" : 'verificar_firma'
+    }
+
+    mapeo_operaciones_otp = {
+        #"1" : 'cambiar_tiempo',
+        #"2" : 'firmar_otp',
+        #"3" : 'invalidar'
+
+    }
+
+
+
+
+
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
     numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
 
