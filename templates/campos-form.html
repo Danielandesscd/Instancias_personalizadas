@@ -8,15 +8,37 @@
     <title>Datos Formulario</title>
 </head>
 <body>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#departamento').change(function() {
+    <script>
+        $(document).ready(function() {
+            // Obtener los municipios cuando cambie el departamento
+            $('#departamento').change(function() {
+                var departamentoId = $(this).val();
+                $.ajax({
+                    url: '/obtener_municipios_ajax/',
+                    type: 'GET',
+                    data: { id_departamento: departamentoId },
+                    success: function(data) {
+                        $('#municipio').empty();
+                        $.each(data.municipios, function(index, municipio) {
+                            $('#municipio').append($('<option>', {
+                                value: municipio.id,
+                                text: municipio.nombre
+                            }));
+                        });
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        console.log('Error al obtener municipios:', errorThrown);
+                    }
+                });
+            });
+
+            // Obtener los departamentos al cargar la página
             $.ajax({
                 url: "{% url 'obtener_departamentos' %}",
                 type: 'GET',
                 success: function(response) {
-                    // Actualizar el campo de departamento con los datos recibidos
                     $('#departamento').empty();
                     $.each(response.departamentos, function(index, departamento) {
                         $('#departamento').append($('<option>', {
@@ -30,8 +52,7 @@
                 }
             });
         });
-    });
-</script>
+    </script>
     <div class="container-fluid">
         <div class="row">
             <div class="col-10 col-sm-8 col-md-8 col-lg-6 mx-auto">
@@ -94,16 +115,19 @@
                     </div>
                     <div class="mb-3">
                         <label for="departamento" class="form-label"><b>Departamento</b></label>
-                        <select class="form-control" id="departamento" name="departamento">
-                            <!-- Iterar sobre la lista de departamentos y generar opciones -->
+                        <select class="form-select" id="departamento" name="departamento_id">
                             {% for departamento in departamentos %}
-                                <option value="{{ departamento.id_departamento }}">{{ departamento.nombre }}</option>
+                                <option value="{{ departamento.id }}">{{ departamento.nombre }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    
+                    <!-- Campo Municipio -->
                     <div class="mb-3">
                         <label for="municipio" class="form-label"><b>Municipio</b></label>
-                        <input type="text" class="form-control" id="municipio" name="municipio">
+                        <select class="form-select" id="municipio" name="municipio">
+                            <!-- Los municipios se llenarán dinámicamente con JavaScript -->
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="direccion" class="form-label"><b>Dirección</b></label>

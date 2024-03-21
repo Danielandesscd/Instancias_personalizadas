@@ -9,6 +9,8 @@ from zeep import Client
 from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
+from django.conf import settings
+
 from django.http import JsonResponse
 from django.utils.encoding import force_str
 
@@ -24,8 +26,6 @@ from zeep.exceptions import TransportError, XMLSyntaxError
 
 from zeep.wsse.username import UsernameToken
 from django.shortcuts import render, get_object_or_404
-
-
 
 
 def inicio(request):
@@ -44,8 +44,6 @@ def inicio(request):
 
         return render(request, 'inicio.html')
     
-
-
 
 
 def detalle_convenio(request, convenio_id):
@@ -246,45 +244,95 @@ def formulario_instancia(request):
     return render(request, 'formulario.html')
 
 def campos_form(request):
-    departamentos = obtener_departamentos(request)
-    print(departamentos)  # Imprimirá los departamentos en la terminal
+    departamentos = obtener_departamentos()
+    print("departamentos:", departamentos)  # Imprimirá los departamentos en la terminal
     return render(request, 'campos-form.html', {'departamentos': departamentos})
 
-def obtener_departamentos(request):
+def obtener_departamentos():
     url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
 
-    payload = """<soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+    payload = """
+    <soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
        <soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713"><wsse:Username>PAAN</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">WEJdNHmFGnOeCnqNc/vIXRyJafs=</wsse:Password><wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">+fJQ1IEmt2xbAZooSaCNew==</wsse:Nonce><wsu:Created>2024-03-14T13:12:42.268Z</wsu:Created></wsse:UsernameToken></wsse:Security></soapenv:Header>
        <soapenv:Body>
           <and:DepartamentoRequest>
              <and:cadena/>
           </and:DepartamentoRequest>
        </soapenv:Body>
-    </soapenv:Envelope>"""
+    </soapenv:Envelope>
+    """
 
     headers = {
-        'Content-Type': 'text/xml',
-        'Authorization': 'Basic UEFBTjpnTjlGMnVla3Ru'
+      'Content-Type': 'text/xml'
     }
 
-    response = requests.post(url, headers=headers, data=payload)
-
-    if response.status_code == 200:
-        # Parsear la respuesta XML
-        root = ET.fromstring(response.content)
-        namespaces = {'and': 'http://www.andesscd.com.co/'}
-        # Encontrar los elementos que contienen los nombres de los departamentos
-        departamentos = root.findall('.//and:Departamento', namespaces)
-        nombres_departamentos = [departamento.find('and:nombre', namespaces).text for departamento in departamentos]
+    try:
+        # Realiza la solicitud SOAP
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()  # Lanza una excepción si la solicitud falla (por ejemplo, código de estado HTTP diferente de 200)
         
-        # Devolver la lista de nombres de departamentos como respuesta JSON
-        return JsonResponse({'departamentos': nombres_departamentos})
+        # Analiza la respuesta XML para obtener los departamentos
+        root = ET.fromstring(response.content)
+        mensaje = root.find(".//{http://www.andesscd.com.co/}mensaje").text
+        departamentos = json.loads(mensaje)
+        
+        # Devuelve los departamentos obtenidos de la respuesta SOAP
+        return departamentos
+    
+    except requests.exceptions.RequestException as e:
+        # Manejo de errores en caso de fallo de la solicitud SOAP
+        return {'error': str(e)}
+    
 
-    else:
-        # Si la solicitud falla, devolver un mensaje de error
-        return JsonResponse({'error': 'No se pudo obtener la lista de departamentos'})
 
+def obtener_municipios(id_departamento):
+    url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
 
+    payload = """
+    <soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+       <soapenv:Header/>
+       <soapenv:Body>
+          <and:MunicipioRequest>
+             <and:id_departamento>%s</and:id_departamento>
+          </and:MunicipioRequest>
+       </soapenv:Body>
+    </soapenv:Envelope>
+    """ % id_departamento
+
+    headers = {
+      'Content-Type': 'text/xml',
+      'Authorization': 'Basic UEFBTjpnTjlGMnVla3Ru'
+    }
+
+    try:
+        # Realiza la solicitud SOAP
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()  # Lanza una excepción si la solicitud falla (por ejemplo, código de estado HTTP diferente de 200)
+        
+        # Analiza la respuesta XML para obtener los municipios
+        root = ET.fromstring(response.content)
+        municipios = []
+        print("municipios:",root)
+        print("print:",response)
+
+        for municipio in root.findall('.//and:Municipio', namespaces={'and': 'http://www.andesscd.com.co/'}):
+            id_municipio = municipio.find('.//and:id_municipio', namespaces={'and': 'http://www.andesscd.com.co/'}).text
+            nombre = municipio.find('.//and:nombre', namespaces={'and': 'http://www.andesscd.com.co/'}).text
+            municipios.append({'id': id_municipio, 'nombre': nombre})
+        
+        # Devuelve los municipios obtenidos de la respuesta SOAP
+        return municipios
+    
+    except requests.exceptions.RequestException as e:
+        # Manejo de errores en caso de fallo de la solicitud SOAP
+        return [{'error': str(e)}]
+
+def obtener_municipios_ajax(request):
+    if request.method == 'GET' and 'id_departamento' in request.GET:
+        id_departamento = request.GET['id_departamento']
+        municipios = obtener_municipios(id_departamento)
+        return JsonResponse({'municipios': municipios})
+    return JsonResponse({'error': 'Método de solicitud no permitido o falta el parámetro id_departamento'}, status=400)
 
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):

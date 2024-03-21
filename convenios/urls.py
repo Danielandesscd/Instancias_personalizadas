@@ -9,7 +9,8 @@ from instancias import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
-    
+    path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
+    path('obtener_municipios_ajax/', views.obtener_municipios_ajax, name='obtener_municipios_ajax'),
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
     path('campos_form', views.campos_form, name='campos_form'),
