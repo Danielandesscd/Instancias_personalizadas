@@ -11,17 +11,13 @@ from requests.auth import HTTPBasicAuth
 import json
 from django.http import JsonResponse
 from django.utils.encoding import force_str
-
 from django.views.decorators.csrf import csrf_exempt
-
 import requests
 from requests import Session
-
 import xml.etree.ElementTree as ET
 import base64
 from zeep import Client, Transport
 from zeep.exceptions import TransportError, XMLSyntaxError
-
 from zeep.wsse.username import UsernameToken
 from django.shortcuts import render, get_object_or_404
 
@@ -88,19 +84,19 @@ def plantilla_dinamica(request, convenio_id):
         "1" : 'consultar',
         "2" : 'revocar',
         "3" : 'cambiar_pin',
-        #"4" : 'reposicion'
+        "4" : 'reposicion'
 
     }
 
     mapeo_operaciones_firmado = {
         "1" : 'firmar_doc',
-        #"2" : 'verificar_firma'
+        "2" : 'verificar_firma'
     }
 
     mapeo_operaciones_otp = {
-        #"1" : 'cambiar_tiempo',
-        #"2" : 'firmar_otp',
-        #"3" : 'invalidar'
+        "1" : 'cambiar_tiempo',
+        "2" : 'firmar_otp',
+        "3" : 'invalidar'
 
     }
 
@@ -111,20 +107,39 @@ def plantilla_dinamica(request, convenio_id):
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
     numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
 
-    # Mapea los números a los nombres de los certificados
+    
     certificados = [mapeo_tipos_certificado.get(numero) for numero in numeros_certificados]
     
-    # Para cada certificado, obtener la ruta del formulario asociado
+    
     formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
     print("formularios: ", formularios)
-    # Combina certificados y formularios en una lista de tuplas
+    print("color: ", convenio.color_primario)
+    
     certificados_con_formularios = zip(certificados, formularios)
 
-    return render(request, 'plantilla_convenio.html', {'convenio': convenio, 'certificados_con_formularios': certificados_con_formularios})
+    
+    numeros_operacion_cert = convenio.o_cert_permi.split(',') if convenio.o_cert_permi else []
+    operaciones_certificado = [mapeo_operacion_cert.get(numero) for numero in numeros_operacion_cert]
+
+    
+    numeros_operaciones_firmado = convenio.o_firmado_permi.split(',') if convenio.o_firmado_permi else []
+    operaciones_firmado = [mapeo_operaciones_firmado.get(numero) for numero in numeros_operaciones_firmado]
+
+    
+    numeros_operaciones_otp = convenio.o_otp_permi.split(',') if convenio.o_otp_permi else []
+    operaciones_otp = [mapeo_operaciones_otp.get(numero) for numero in numeros_operaciones_otp]
+
+    return render(request, 'plantilla_convenio.html', {
+        'convenio': convenio,
+        'certificados_con_formularios': certificados_con_formularios,
+        'operaciones_certificado': operaciones_certificado,
+        'operaciones_firmado': operaciones_firmado,
+        'operaciones_otp': operaciones_otp
+    })
 
 
-
-
+def login_instancia(request):
+    return render(request, 'login_instancia.html')
 
 def consultar(request):
     return render (request, 'consultar_cert.html')

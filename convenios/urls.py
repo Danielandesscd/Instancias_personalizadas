@@ -31,6 +31,7 @@ urlpatterns = [
     path('cambiar_pin/', views.cambiar_pin, name='cambiar_pin'),
     path('firmar_doc/', views.firmar_doc, name='firmar_doc'),
     path('plantilla_dinamica/<int:convenio_id>/', views.plantilla_dinamica, name='detalle_convenio'),
+    path('login_instancia/', views.login_instancia, name='login_instancia'),
 
 ]
 
