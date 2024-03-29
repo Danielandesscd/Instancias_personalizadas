@@ -10,6 +10,8 @@ from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
 from django.conf import settings
+from django.template.loader import render_to_string
+import os
 
 from django.http import JsonResponse
 from django.utils.encoding import force_str
@@ -45,6 +47,7 @@ def inicio(request):
         return render(request, 'inicio.html')
     
 
+    
 
 def detalle_convenio(request, convenio_id):
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
@@ -57,6 +60,101 @@ def home(request):
     convenios_text = [force_str(nombre) for nombre in convenios]
     print("convenios:", convenios_text)  
     return render(request, 'home.html', {'convenios': convenios_text})
+
+
+
+
+
+def plantilla_dinamica(request, convenio_id):
+    mapeo_tipos_certificado = {
+    "10": "Facturación Electrónica - Persona Jurídica",
+    "11": "Facturación Electrónica - Persona Natural",
+    "6": "Comunidad Académica",
+    "9": "Pertenencia Empresa",
+    "7": "Profesional Titulado",
+    "8": "Representante Legal",
+    "12": "Función Pública",
+    "13": "Persona Jurídica",
+    "14": "Función Pública para SIIF Nación",
+    "5": "Persona Natural",
+    "15": "Persona Natural Para Actividad Comercial(Rut)"
+}
+    
+    mapeo_certificados_formularios = {
+        "10": 'form-fe-pj',
+        "11": 'form-fe-pn',
+        #"6": 'form-com-acad.html',
+        "9": 'form-pert-emp',
+        "7": 'form-prof-titu',
+        #"8": 'form-rep-legal.html',
+        #"12": 'form-func-pub.html',
+        "13": 'form-pers-jur',
+        #"14": 'form-func-pub-nacion.html',
+        "5": 'form-pers-nat',
+        "15": 'form-pers-nat-rut'
+    }
+
+    mapeo_operacion_cert = {
+        "1" : 'consultar',
+        "2" : 'revocar',
+        "3" : 'cambiar_pin',
+        "4" : 'reposicion'
+
+    }
+
+    mapeo_operaciones_firmado = {
+        "1" : 'firmar_doc',
+        "2" : 'verificar_firma'
+    }
+
+    mapeo_operaciones_otp = {
+        "1" : 'cambiar_tiempo',
+        "2" : 'firmar_otp',
+        "3" : 'invalidar'
+
+    }
+
+
+
+
+
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
+
+    
+    certificados = [mapeo_tipos_certificado.get(numero) for numero in numeros_certificados]
+    
+    
+    formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
+    print("formularios: ", formularios)
+    
+    certificados_con_formularios = zip(certificados, formularios)
+
+    
+    numeros_operacion_cert = convenio.o_cert_permi.split(',') if convenio.o_cert_permi else []
+    operaciones_certificado = [mapeo_operacion_cert.get(numero) for numero in numeros_operacion_cert]
+
+    
+    numeros_operaciones_firmado = convenio.o_firmado_permi.split(',') if convenio.o_firmado_permi else []
+    operaciones_firmado = [mapeo_operaciones_firmado.get(numero) for numero in numeros_operaciones_firmado]
+
+    #ruta_banner = convenio.banner_image_path
+    numeros_operaciones_otp = convenio.o_otp_permi.split(',') if convenio.o_otp_permi else []
+    operaciones_otp = [mapeo_operaciones_otp.get(numero) for numero in numeros_operaciones_otp]
+
+    return render(request, 'plantilla_convenio.html', {
+        'convenio': convenio,
+        'certificados_con_formularios': certificados_con_formularios,
+        'operaciones_certificado': operaciones_certificado,
+        'operaciones_firmado': operaciones_firmado,
+        'color_primario': convenio.color_primario,
+        'color_secundario': convenio.color_secundario,
+        #'ruta_banner': ruta_banner,
+        'operaciones_otp': operaciones_otp
+    })
+
+
+
 
 def consultar(request):
     return render (request, 'consultar_cert.html')
@@ -137,6 +235,10 @@ def guardar_convenios(request):
         return JsonResponse({'message': 'Convenios guardados correctamente.'})
 
     return JsonResponse({'error': 'Se esperaba una solicitud POST.'}, status=400)
+
+def instancia_empresa(request, nombre_empresa):
+    template_name = f'instancia_empresas/{nombre_empresa}.html'
+    return render(request, template_name)
 
 @csrf_exempt
 def crear_instancia(request):
@@ -237,7 +339,17 @@ def crear_instancia(request):
         )
 
         convenio.save()
+        # Renderizar la plantilla específica para esta instancia
+        html_content = render_to_string('plantilla_convenio.html', {'convenio': convenio})
+
+        # Guardar el contenido HTML en un archivo específico
+        file_path = f'media/instancia_empresas/{convenio.nombre.replace(" ", "_").lower()}.html'
+        with open(file_path, 'w') as f:
+            f.write(html_content)
+
+        # Redirigir a la página de inicio
         return redirect('home')
+
     return render(request, 'home.html')
 
 def formulario_instancia(request):
@@ -387,7 +499,3 @@ def solicitud_vinculacion_empresa(tipo_cert, tipo_doc, documento, nombres, apell
     client = Client(url_servicio)
     resultado = client.service.CertificateVinculacionEmpresaRequest(tipoCert=tipo_cert, tipoDoc=tipo_doc, documento=documento, nombres=nombres, apellidos=apellidos, municipio=municipio, direccion=direccion, email=email, emailEnt=email_ent, telefono=telefono, celular=celular, ocupacion=ocupacion, tipoDocEnt=tipo_doc_ent, documentoEnt=documento_ent, razonsocial=razonsocial, municipioEnt=municipio_ent, direccionEnt=direccion_ent, cargo=cargo, unidadOrganizacional=unidad_organizacional, fechaCert=fecha_cert, formato=formato, vigenciaCert=vigencia_cert, testigo=testigo, foto=foto, pin=pin, pkcs10=pkcs10, soporte=soporte, verific_doc=verific_doc, plantillaHuella=plantilla_huella, token_andesid=token_andesid)
     return resultado
-
-
-
-

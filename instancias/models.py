@@ -88,7 +88,11 @@ class CONVENIO(models.Model):
     formatos_entrega = models.ManyToManyField(FormatoEntrega, related_name='convenios')
     
     certificados_seleccionados = models.ManyToManyField(TIPO_CERT, related_name='convenios')
-
+    
+    def save(self, *args, **kwargs):
+        # Generar y guardar la URL automáticamente
+        self.url = f'/instancia/{self.nombre.replace(" ", "_").lower()}/'
+        super().save(*args, **kwargs)
 
     
 class FORMATO_ENTREGA(models.Model):

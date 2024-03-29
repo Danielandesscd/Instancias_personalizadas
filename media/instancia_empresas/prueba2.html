@@ -1,11 +1,11 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Instancia personalizada</title>
-  <link href="{% static 'styles.css' %}" rel="stylesheet">
+  <link href="/static/styles.css" rel="stylesheet">
   <link rel="icon" type="imagen" href="static/icono.png">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
  
@@ -14,20 +14,20 @@
 
  
   <label for="logueo"></label>
-        <input type="checkbox" id="logueo" name="logueo" {% if convenio.logueo %} checked {% endif %}>
+        <input type="checkbox" id="logueo" name="logueo" >
         <br>
 
 
 <div id="cont-principal" class="container"> 
   <div class="container">
     <div class="d-flex justify-content-end mt-5">
-        <a href="{% url 'home' %}" class="btn btn-primary">Atr√°s</a>
+        <a href="/home" class="btn btn-primary">Atr·s</a>
     </div>
 </div>
-<img id="logo" src="{{ convenio.logo.url }}" alt="{{ convenio.nombre }} logo" width="250">
+<img id="logo" src="/media/logos/colpatria_IsX1Iny.JPG" alt="prueba2 logo" width="250">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
   
-    <a class="navbar-brand">{{ convenio.nombre }}</a>
+    <a class="navbar-brand">prueba2</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -41,9 +41,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for certificado, formulario in certificados_con_formularios %}
-                    <li><a href="{% url formulario %}">{{ certificado }}</a></li>
-                {% endfor %}
+                
           </ul>
         </div>
         </li>
@@ -53,9 +51,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for operacion_cert in operaciones_cert %}
-                    <li>{{ operacion_cert }}</li>
-                {% endfor %}
+                
           </ul>
         </div>
         </li>
@@ -65,9 +61,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for operacion_firmado in operaciones_firmado %}
-                    <li>{{ operacion_firmado }}</li>
-                {% endfor %}
+                
           </ul>
         </div>
         </li>
@@ -77,9 +71,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for operacion_otp in operaciones_otp %}
-                    <li>{{ operacion_otp }}</li>
-                {% endfor %}
+                
           </ul>
         </div>
         </li>
@@ -88,12 +80,12 @@
       
     </div>
   </nav>
-  <img id="imagen_banner" src="{{ convenio.imagen_banner.url }}" alt="{{ convenio.nombre }} banner" width="1000" height="500">
+  <img id="imagen_banner" src="/media/banners/company_K6jW1mC.JPG" alt="prueba2 banner" width="1000" height="500">
 
 </div>
-<footer>Carrera 27 No. 86 - 43 Bogot√°, Colombia <br> PBX 7953430 -3816776 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
+<footer>Carrera 27 No. 86 - 43 Bogot·, Colombia <br> PBX 7953430 -3816776 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
 
-<!-- Enlazar Bootstrap JS (requerido para el funcionamiento de los componentes de navegaci√≥n) -->
+<!-- Enlazar Bootstrap JS (requerido para el funcionamiento de los componentes de navegaciÛn) -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
