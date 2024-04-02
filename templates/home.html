@@ -32,11 +32,12 @@
                     {% for convenio in convenios %}
                     <div class="list-group-item list-group-item-action">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ convenio.url }}">{{ convenio.nombre }}</a>
-                            <!-- Otros elementos del listado -->
+                            <a href="{% url 'plantilla_convenio' convenio.id %}">{{ convenio.nombre }}</a>
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+            </div>
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                     id="dropdownMenuLink{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-three-dots-vertical"></i>
@@ -65,7 +66,7 @@
     </script>
     
 
-    <footer>Carrera 27 No. 86 - 43 Bogotá, Colombia <br> PBX 7953430 -3816776 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
+    <footer>Ac 26 # 69c 03 Torre B Of 701 Edificio Capital Center II <br> Bogotá, Colombia | PBX +601 241 5539 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     

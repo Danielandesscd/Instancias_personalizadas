@@ -12,21 +12,19 @@ import json
 from django.conf import settings
 from django.template.loader import render_to_string
 import os
-
+from django.template import TemplateDoesNotExist
+from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from django.utils.encoding import force_str
-
 from django.views.decorators.csrf import csrf_exempt
-
 import requests
 from requests import Session
-
 import xml.etree.ElementTree as ET
 import base64
 from zeep import Client, Transport
 from zeep.exceptions import TransportError, XMLSyntaxError
-
 from zeep.wsse.username import UsernameToken
+from django.shortcuts import render, get_object_or_404
 from django.shortcuts import render, get_object_or_404
 
 
@@ -46,7 +44,9 @@ def inicio(request):
 
         return render(request, 'inicio.html')
     
-
+def plantilla_convenio(request, id):
+    convenio = get_object_or_404(CONVENIO, id=id)
+    return render(request, 'plantilla_convenio.html', {'convenio': convenio})
     
 
 def detalle_convenio(request, convenio_id):
@@ -56,10 +56,8 @@ def detalle_convenio(request, convenio_id):
 
 
 def home(request):
-    convenios = CONVENIO.objects.all().values_list('nombre', flat=True)
-    convenios_text = [force_str(nombre) for nombre in convenios]
-    print("convenios:", convenios_text)  
-    return render(request, 'home.html', {'convenios': convenios_text})
+    convenios = CONVENIO.objects.all()
+    return render(request, 'home.html', {'convenios': convenios})
 
 
 
@@ -127,6 +125,7 @@ def plantilla_dinamica(request, convenio_id):
     
     formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
     print("formularios: ", formularios)
+    print("color: ", convenio.color_primario)
     
     certificados_con_formularios = zip(certificados, formularios)
 
@@ -138,7 +137,7 @@ def plantilla_dinamica(request, convenio_id):
     numeros_operaciones_firmado = convenio.o_firmado_permi.split(',') if convenio.o_firmado_permi else []
     operaciones_firmado = [mapeo_operaciones_firmado.get(numero) for numero in numeros_operaciones_firmado]
 
-    #ruta_banner = convenio.banner_image_path
+    
     numeros_operaciones_otp = convenio.o_otp_permi.split(',') if convenio.o_otp_permi else []
     operaciones_otp = [mapeo_operaciones_otp.get(numero) for numero in numeros_operaciones_otp]
 
@@ -147,14 +146,12 @@ def plantilla_dinamica(request, convenio_id):
         'certificados_con_formularios': certificados_con_formularios,
         'operaciones_certificado': operaciones_certificado,
         'operaciones_firmado': operaciones_firmado,
-        'color_primario': convenio.color_primario,
-        'color_secundario': convenio.color_secundario,
-        #'ruta_banner': ruta_banner,
         'operaciones_otp': operaciones_otp
     })
 
 
-
+def login_instancia(request):
+    return render(request, 'login_instancia.html')
 
 def consultar(request):
     return render (request, 'consultar_cert.html')
@@ -238,7 +235,10 @@ def guardar_convenios(request):
 
 def instancia_empresa(request, nombre_empresa):
     template_name = f'instancia_empresas/{nombre_empresa}.html'
-    return render(request, template_name)
+    try:
+        return render(request, template_name)
+    except TemplateDoesNotExist:
+        return HttpResponseServerError(f'Error: La plantilla "{template_name}" no existe.')
 
 @csrf_exempt
 def crear_instancia(request):
@@ -339,16 +339,7 @@ def crear_instancia(request):
         )
 
         convenio.save()
-        # Renderizar la plantilla específica para esta instancia
-        html_content = render_to_string('plantilla_convenio.html', {'convenio': convenio})
-
-        # Guardar el contenido HTML en un archivo específico
-        file_path = f'media/instancia_empresas/{convenio.nombre.replace(" ", "_").lower()}.html'
-        with open(file_path, 'w') as f:
-            f.write(html_content)
-
-        # Redirigir a la página de inicio
-        return redirect('home')
+        
 
     return render(request, 'home.html')
 
