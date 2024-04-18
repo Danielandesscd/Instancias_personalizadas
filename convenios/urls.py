@@ -13,7 +13,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
     path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
-    path('obtener_municipios_ajax/', views.obtener_municipios_ajax, name='obtener_municipios_ajax'),
+    path('obtener_municipios/<int:id_departamento>/', views.obtener_municipios, name='obtener_municipios'),
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
     path('campos_form', views.campos_form, name='campos_form'),
@@ -38,6 +38,9 @@ urlpatterns = [
     path('plantilla_convenio/<int:id>/', views.plantilla_convenio, name='plantilla_convenio'),
     path('login_instancia/<int:convenio_id>/', views.login_instancia, name='login_instancia'),
     path('formulario_certificado/', views.formulario_certificado, name='formulario_certificado'),
+    path('formulario1/', views.formulario1, name='formulario1'),
+    path('procesar-formulario/', views.procesar_formulario, name='procesar_formulario'),
+
     path('verificar_convenio/<int:convenio_id>/', views.verificar_convenio, name='verificar_convenio'),
     path('login_instancia/', views.login_instancia, name='login_instancia'),
 

@@ -13,7 +13,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 import os
 from django.template import TemplateDoesNotExist
-from django.http import HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError
 from django.http import JsonResponse
 from django.utils.encoding import force_str
 from django.views.decorators.csrf import csrf_exempt
@@ -402,6 +402,20 @@ def guardar_certificado(request):
 def formulario_instancia(request):
     return render(request, 'formulario.html')
 
+def formulario1(request):
+    departamentos = obtener_departamentos()  # Llamar a la función para obtener la lista de departamentos
+    return render(request, 'formulario1.html', {'departamentos': departamentos})
+def procesar_formulario(request):
+    if request.method == 'POST':
+        # Aquí puedes procesar los datos del formulario enviado
+        # Por ejemplo, puedes acceder a los datos del formulario usando request.POST
+        
+        # Luego, puedes realizar cualquier lógica de procesamiento necesaria
+        # Por ahora, simplemente devolveremos una respuesta de éxito
+        return HttpResponse('¡Formulario procesado con éxito!')
+    else:
+        # Si la solicitud no es POST, puedes manejarlo según sea necesario
+        return HttpResponse('¡Solicitud no válida!')
 def campos_form(request):
     departamentos = obtener_departamentos()
     print("departamentos:", departamentos)  # Imprimirá los departamentos en la terminal

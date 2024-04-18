@@ -113,3 +113,8 @@ class VIGENCIA(models.Model):
     id_cert = models.IntegerField()
 
 
+class CONFI_CERTIFICADOS(models.Model):
+    id_convenio = models.IntegerField
+    id_certificado = models.IntegerField
+    vigencias = models.IntegerField
+    Formato = models.IntegerField
