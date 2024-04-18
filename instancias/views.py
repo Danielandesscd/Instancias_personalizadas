@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from suds.client import Client
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from .models import CONVENIO, TIPO_CERT
+from .models import CONFI_CERTIFICADOS, CONVENIO, TIPO_CERT
 from django.contrib.auth.hashers import make_password
 from zeep import Client
 from zeep.transports import Transport
@@ -26,7 +26,8 @@ from zeep.exceptions import TransportError, XMLSyntaxError
 from zeep.wsse.username import UsernameToken
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import render, get_object_or_404
-
+import hashlib
+from django.contrib.auth import logout
 
 def inicio(request):
     if request.method == 'POST':
@@ -43,6 +44,20 @@ def inicio(request):
     else:
 
         return render(request, 'inicio.html')
+    
+
+def login_instancia(request):
+    if request.method == 'POST':
+        usuario = request.POST.get('usuario')
+        contraseña = request.POST.get('contraseña')
+        try:
+            convenio = CONVENIO.objects.get(usuario=usuario, contraseña=contraseña)
+            return redirect('plantilla_convenio')
+        except CONVENIO.DoesNotExist:
+             return render(request, 'login_instancia.html', {'error': 'Usuario o contraseña incorrectos'})
+    else:
+        return render(request, 'login_instancia.html')
+    
     
 def plantilla_convenio(request, id):
     convenio = get_object_or_404(CONVENIO, id=id)
@@ -118,14 +133,14 @@ def plantilla_dinamica(request, convenio_id):
 
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
     numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
-
-    
     certificados = [mapeo_tipos_certificado.get(numero) for numero in numeros_certificados]
     
     
     formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
     print("formularios: ", formularios)
     print("color: ", convenio.color_primario)
+    print("Nombre del convenio:", convenio.nombre)
+    print("Color primario del convenio:", convenio.color_primario)
     
     certificados_con_formularios = zip(certificados, formularios)
 
@@ -147,11 +162,41 @@ def plantilla_dinamica(request, convenio_id):
         'operaciones_certificado': operaciones_certificado,
         'operaciones_firmado': operaciones_firmado,
         'operaciones_otp': operaciones_otp
+    
     })
 
 
-def login_instancia(request):
-    return render(request, 'login_instancia.html')
+
+def formulario_dinamico(request, convenio_id):
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    print("Nombre del convenio for:", convenio.nombre)
+    print("Color primario del convenio for:", convenio.color_primario)
+    #return render(request, 'form-pers-nat.html', {'convenio': convenio})
+    return render(request, 'form-pers-nat.html', {
+        'convenio_id': convenio.id,
+        'convenio_nombre': convenio.nombre,
+    })
+
+
+def verificar_convenio(request, convenio_id):
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    if convenio.contraseña_convenio:
+        return redirect('login_instancia', convenio_id=convenio_id)
+    else:
+        return render(request, 'plantilla_convenio.html', {'convenio': convenio})
+
+def login_instancia(request, convenio_id):
+    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    if request.method == 'POST':
+        contraseña = request.POST.get('contraseña')
+        convenio_valido = CONVENIO.objects.filter(pk=convenio_id, contraseña_webservice=contraseña).first()
+        if convenio_valido:
+            return redirect('plantilla_convenio', id=convenio_id) 
+        else:
+            messages.error(request, 'Usuario o contraseña incorrectos')
+    return render(request, 'login_instancia.html', {'convenio': convenio})
+
+
 
 def consultar(request):
     return render (request, 'consultar_cert.html')
@@ -196,14 +241,11 @@ def certificado_fact_pn(request):
 
 def procesar_formulario_convenio(request):
     if request.method == 'POST':
-        # Procesar el formulario para crear una nueva instancia de CONVENIO
         convenio = CONVENIO(nombre=request.POST['nombre'])
         convenio.save()
         
-        # Obtener los certificados seleccionados del formulario
         certificados_seleccionados_ids = request.POST.getlist('tipos_certificados')
         
-        # Asociar los certificados seleccionados con el convenio creado
         for certificado_id in certificados_seleccionados_ids:
             TIPO_CERT = TIPO_CERT.objects.get(pk=certificado_id)
             convenio.certificados_seleccionados.add(TIPO_CERT)
@@ -219,13 +261,10 @@ def guardar_convenios(request):
     if request.method == 'POST':
         data = request.POST.dict()
 
-        # Obtener los IDs de los certificados seleccionados
         certificados_seleccionados = [key for key, value in data.items() if value == 'on']
 
-        # Convertir la lista de IDs en una cadena separada por comas
         certificados_permi = ','.join(certificados_seleccionados)
 
-        # Crear una nueva instancia de Convenio y guardarla en la base de datos
         convenio = CONVENIO(certificados_permi=certificados_permi)
         convenio.save()
 
@@ -257,7 +296,6 @@ def crear_instancia(request):
         contraseña_convenio_encriptada = make_password(contraseña_convenio)
         print("Contenido de request.POST:", request.POST)
 
-        # Obtener los certificados seleccionados
         certificado_persona_natural = request.POST.get('certificado_persona_natural')
         certificado_persona_juridica = request.POST.get('certificado_persona_juridica')
         certificado_pertenencia_empresa = request.POST.get('certificado_pertenencia_empresa')
@@ -270,22 +308,18 @@ def crear_instancia(request):
         certificado_Funcion_Publica = request.POST.get('certificado_Funcion_Publica')
         certificado_Representante_Legal = request.POST.get('certificado_Representante_Legal')
 
-        # Obtener las operaciones de certificado seleccionadas
         consultar_certificado = request.POST.get('consultar_certificado')
         revocar_certificado = request.POST.get('revocar_certificado')
         cambiar_pin = request.POST.get('cambiar_pin')
         reposicion_certificado = request.POST.get('reposicion_certificado')
         
-        # Obtener las operaciones de firmado seleccionadas
         firmar_documento = request.POST.get('firmar_documento')
         verificar_firma = request.POST.get('verificar_firma')
         
-        # Obtener las operaciones de OTP seleccionadas
         cambiar_otp = request.POST.get('cambiar_otp')
         firmar_con_otp = request.POST.get('firmar_con_otp')
         invalidar_otp = request.POST.get('invalidar_otp')
         
-        # Obtener las vigencias del certificado seleccionadas
         vigencia_1_dia = request.POST.get('vigencia_1_dia')
         vigencia_1_mes = request.POST.get('vigencia_1_mes')
         vigencia_3_meses = request.POST.get('vigencia_3_meses')
@@ -294,29 +328,22 @@ def crear_instancia(request):
         vigencia_18_meses = request.POST.get('vigencia_18_meses')
         vigencia_2_anos = request.POST.get('vigencia_2_anos')
         
-        # Obtener los formatos de entrega seleccionados
         token_virtual = request.POST.get('token_virtual')
         token_fisico = request.POST.get('token_fisico')
         pkcs10 = request.POST.get('pkcs10')
 
 
 
-        # Concatenar los valores de los certificados
         certificados_permi = ','.join(filter(None, [ certificado_Representante_Legal,certificado_Funcion_Publica ,certificado_Funcion_Publica,certificado_Facturacion_Electronica_Persona_JurÍdica,certificado_Facturacion_Electronica_Persona_Natural,certificado_Persona_Natural_Con_RUT,certificado_Profesional_Titulado ,certificado_Función_Publica_SIIF_Nación,certificado_Comunidada_Académica,certificado_persona_natural, certificado_persona_juridica, certificado_pertenencia_empresa]))
-        print("Certificados permiso:", certificados_permi)  # Imprimir en la terminal
-        # Concatenar los valores de las operaciones de certificado
+        print("Certificados permiso:", certificados_permi)   #Imprimir en la terminal
         o_cert_permi = ','.join(filter(None, [consultar_certificado, revocar_certificado, cambiar_pin, reposicion_certificado]))
         
-        # Concatenar los valores de las operaciones de firmado
         o_firmado_permi = ','.join(filter(None, [firmar_documento, verificar_firma]))
         
-        # Concatenar los valores de las operaciones de OTP
         o_otp_permi = ','.join(filter(None, [cambiar_otp, firmar_con_otp, invalidar_otp]))
         
-        # Concatenar los valores de las vigencias del certificado
         vigencias_permi = ','.join(filter(None, [vigencia_1_dia, vigencia_1_mes, vigencia_3_meses, vigencia_6_meses, vigencia_1_ano, vigencia_18_meses, vigencia_2_anos]))
         
-        # Concatenar los valores de los formatos de entrega
         formatos_entrega_permi = ','.join(filter(None, [token_virtual, token_fisico, pkcs10]))
 
         convenio = CONVENIO.objects.create(
@@ -339,9 +366,38 @@ def crear_instancia(request):
         )
 
         convenio.save()
-        
+        # Después de guardar los datos, obtenemos el id del convenio creado
+        #id_convenio = convenio.id
+
+        # Redirigimos al usuario a formulario_certificado.html y pasamos el id del convenio como parte del contexto
+        return redirect('formulario_certificado') #id_convenio=id_convenio)
 
     return render(request, 'home.html')
+
+def formulario_certificado(request):#, id_convenio):
+    return render(request, 'formulario_certificado.html')
+
+def guardar_certificado(request):
+    if request.method == 'POST':
+        # Obtener datos del cuerpo de la solicitud
+        data = json.loads(request.body)
+
+        # Obtener el objeto de convenio utilizando el ID pasado en la solicitud
+        convenio = get_object_or_404(CONVENIO, id=data['id_convenio'])
+
+        # Crear un nuevo objeto de certificado asociado al convenio
+        nuevo_certificado = CONFI_CERTIFICADOS.objects.create(
+            id_convenio=convenio,
+            id_certificado=data['tipoCertificado'],
+            vigencias=data['vigencias'],
+            Formato=data['formatos']
+        )
+        
+        # Puedes enviar una respuesta JSON indicando que los datos se guardaron correctamente
+        return JsonResponse({'message': 'Datos guardados correctamente'})
+    else:
+        # Si no es una solicitud POST, devuelve un error
+        return JsonResponse({'error': 'Se espera una solicitud POST'})
 
 def formulario_instancia(request):
     return render(request, 'formulario.html')
@@ -408,11 +464,9 @@ def obtener_municipios(id_departamento):
     }
 
     try:
-        # Realiza la solicitud SOAP
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()  # Lanza una excepción si la solicitud falla (por ejemplo, código de estado HTTP diferente de 200)
         
-        # Analiza la respuesta XML para obtener los municipios
         root = ET.fromstring(response.content)
         municipios = []
         print("municipios:",root)
@@ -423,11 +477,10 @@ def obtener_municipios(id_departamento):
             nombre = municipio.find('.//and:nombre', namespaces={'and': 'http://www.andesscd.com.co/'}).text
             municipios.append({'id': id_municipio, 'nombre': nombre})
         
-        # Devuelve los municipios obtenidos de la respuesta SOAP
         return municipios
     
     except requests.exceptions.RequestException as e:
-        # Manejo de errores en caso de fallo de la solicitud SOAP
+        
         return [{'error': str(e)}]
 
 def obtener_municipios_ajax(request):

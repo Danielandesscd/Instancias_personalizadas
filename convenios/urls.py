@@ -36,6 +36,9 @@ urlpatterns = [
     path('instancia/<str:nombre_empresa>/', views.instancia_empresa, name='instancia'),
     path('plantilla_dinamica/<int:convenio_id>/', views.plantilla_dinamica, name='detalle_convenio'),
     path('plantilla_convenio/<int:id>/', views.plantilla_convenio, name='plantilla_convenio'),
+    path('login_instancia/<int:convenio_id>/', views.login_instancia, name='login_instancia'),
+    path('formulario_certificado/', views.formulario_certificado, name='formulario_certificado'),
+    path('verificar_convenio/<int:convenio_id>/', views.verificar_convenio, name='verificar_convenio'),
     path('login_instancia/', views.login_instancia, name='login_instancia'),
 
 ]

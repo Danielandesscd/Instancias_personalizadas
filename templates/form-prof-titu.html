@@ -39,7 +39,7 @@
             <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
                     <h2 class="mb-0"><b>Solicitud Certificado Profesional Titulado</b></h2>
                     <div class="mb-3">
-                    <form>
+                    <form method="POST" action="{% url 'profesional_titulado' %}">
                         <br>
                             <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
                             <select class="form-select" id="tipo-documento" name="tipo-documento">

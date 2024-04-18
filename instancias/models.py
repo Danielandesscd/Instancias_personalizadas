@@ -11,9 +11,9 @@ class DATOS(models.Model):
     direccion = models.CharField(max_length=100)
     departamento = models.CharField(max_length=100)
     municipio = models.CharField(max_length=100)
-    tipo_certificado = models.CharField(max_length=100)
-    formato_entrega = models.CharField(max_length=100)
-    vigencia = models.CharField(max_length=100)
+    #tipo_certificado = models.CharField(max_length=100)
+    #formato_entrega = models.CharField(max_length=100)
+    #vigencia = models.CharField(max_length=100)
     documentos = models.CharField(max_length=100)
     ocupacion = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
@@ -25,6 +25,11 @@ class DATOS(models.Model):
     matricula_profesional = models.CharField(max_length=100)
     pin = models.CharField(max_length=100)
 
+class CONFI_CERTIFICADOS(models.Model):
+    id_convenio = models.IntegerField
+    id_certificado = models.IntegerField
+    vigencias = models.IntegerField
+    Formato = models.IntegerField
     
     
 class SOLICITUD_CERT(models.Model):
@@ -108,4 +113,3 @@ class VIGENCIA(models.Model):
     id_cert = models.IntegerField()
 
 
-    

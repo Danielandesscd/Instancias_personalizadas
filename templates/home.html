@@ -29,23 +29,24 @@
             </div>
             <div class="container mt-3">
                 <div class="list-group">
-                    {% for convenio in convenios %}
+                 <!--   {% for convenio in convenios %}
                     <div class="list-group-item list-group-item-action">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'plantilla_convenio' convenio.id %}">{{ convenio.nombre }}</a>
+                            <a href="{% url 'verificar_convenio' convenio.id %}">{{ convenio.nombre }}</a>
                         </div>
                     </div>
-                    {% endfor %}
+                    {% endfor %}-->
                 </div>
             </div>
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+            
+                <!--<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                     id="dropdownMenuLink{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-three-dots-vertical"></i>
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink{{ forloop.counter }}">
                     <li><a class="dropdown-item" href="#">Editar</a></li>
                     <li><a class="dropdown-item" href="#">Eliminar</a></li>
-                </ul>
+                </ul>-->
                             </div>
                         </div>
                     </div>
@@ -53,7 +54,9 @@
                 </div>
             </div>
             
-        <br><br>
+        <br>
+        <br>
+        <br>
             
             
             

@@ -117,7 +117,7 @@ nav.navbar {
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
                 {% for certificado, formulario in certificados_con_formularios %}
-                    <li><a href="{% url formulario %}">{{ certificado }}</a></li>
+                    <li><a href="{% url 'detalle_convenio' convenio.id %}">{{ certificado }}</a></li>
                 {% endfor %}
           </ul>
         </div>
