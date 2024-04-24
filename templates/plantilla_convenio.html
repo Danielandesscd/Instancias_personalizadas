@@ -128,29 +128,26 @@ nav.navbar {
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link dropdown-toggle"  id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Solicitud De Certificado
           </a>
          
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for cert in confi_certificados %}
-                    {% with enlaces_certificados as enlaces %}
-                        {% with enlaces.cert_tipo_certificado as form_name %}
-                            {% if form_name %}
-                                <li>
-                                    <a href="{% url form_name %}">{{ cert.tipo_certificado }}</a>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <span>{{ cert.tipo_certificado }} (no disponible)</span>
-                                </li>
-                            {% endif %}
-                        {% endwith %}
-                    {% endwith %}
-                {% endfor %}
+                {% if certificados_con_nombre_y_formulario %}
+                    {% for certificado in certificados_con_nombre_y_formulario %}
+                        <li>
+                            <a href="{{ certificado.formulario }}">{{ certificado.tipo_certificado }}</a>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>
+                        <span>No hay certificados disponibles</span>
+                    </li>
+                {% endif %}
             </ul>
         </div>
+        
         
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -182,8 +179,8 @@ nav.navbar {
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for operacion_otp in operaciones_otp %}
-                    <li>{{ operacion_otp }}</li>
+                {% for confi_certificados, formulario in certificados_con_formularios %}
+                    <li><a href="{% url formulario %}">{{ confi_certificados }}</a></li>
                 {% endfor %}
           </ul>
         </div>

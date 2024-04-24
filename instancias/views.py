@@ -84,20 +84,32 @@ def home(request):
 
 
 def plantilla_dinamica(request, convenio_id):
-    
+    mapeo_tipos_certificado = {
+    "10": "Facturación Electrónica - Persona Jurídica",
+    "11": "Facturación Electrónica - Persona Natural",
+    "6": "Comunidad Académica",
+    "9": "Pertenencia Empresa",
+    "7": "Profesional Titulado",
+    "8": "Representante Legal",
+    "12": "Función Pública",
+    "13": "Persona Jurídica",
+    "14": "Función Pública para SIIF Nación",
+    "5": "Persona Natural",
+    "15": "Persona Natural Para Actividad Comercial(Rut)"
+}
     
     mapeo_certificados_formularios = {
-        "Facturación Electrónica - Persona Jurídica": 'form-fe-pj',
-        "Facturación Electrónica - Persona Natural": 'form-fe-pn',
-        #"Comunidad Académica": 'form-com-acad.html',
-        "Pertenencia Empresa": 'form-pert-emp',
-        "Profesional Titulado": 'form-prof-titu',
-        #"Representante Legal": 'form-rep-legal.html',
-        #"Función Pública": 'form-func-pub.html',
-        "Persona Jurídica": 'form-pers-jur',
-        #""Función Pública para SIIF Nación": 'form-func-pub-nacion.html',
-        "Persona Natural": 'form-pers-nat',
-        "Persona Natural Para Actividad Comercial(Rut)": 'form-pers-nat-rut'
+        "10": 'form-fe-pj',
+        "11": 'form-fe-pn',
+        #"6": 'form-com-acad.html',
+        "9": 'form-pert-emp',
+        "7": 'form-prof-titu',
+        #"8": 'form-rep-legal.html',
+        #"12": 'form-func-pub.html',
+        "13": 'form-pers-jur',
+        #"14": 'form-func-pub-nacion.html',
+        "5": 'form-pers-nat',
+        "15": 'form-pers-nat-rut'
     }
 
     mapeo_operacion_cert = {
@@ -127,41 +139,45 @@ def plantilla_dinamica(request, convenio_id):
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
     confi_certificados = CONFI_CERTIFICADOS.objects.filter(id_convenio=convenio.id)
 
+    certificados_con_nombre_y_formulario = [
+        {
+            'tipo_certificado': mapeo_tipos_certificado.get(str(cert.tipo_certificado), 'Tipo desconocido'),
+            'formulario': mapeo_certificados_formularios.get(str(cert.tipo_certificado), '#'),  # Default to '#'
+            'detalles_certificado': cert,
+        }
+        for cert in confi_certificados
+    ]
+
     for cert in confi_certificados:
        
         print("Tipo de Certificado:", cert.tipo_certificado) 
           
-        print("---")  
-
-   
-    print("formularios: ", cert.tipo_certificado)
+        print("---")
+    
     print("color: ", convenio.color_primario)
     print("Nombre del convenio:", convenio.nombre)
     print("Color primario del convenio:", convenio.color_primario)
     
-  
+   
 
+    
     numeros_operacion_cert = convenio.o_cert_permi.split(',') if convenio.o_cert_permi else []
     operaciones_certificado = [mapeo_operacion_cert.get(numero) for numero in numeros_operacion_cert]
 
+    
     numeros_operaciones_firmado = convenio.o_firmado_permi.split(',') if convenio.o_firmado_permi else []
     operaciones_firmado = [mapeo_operaciones_firmado.get(numero) for numero in numeros_operaciones_firmado]
 
+    
     numeros_operaciones_otp = convenio.o_otp_permi.split(',') if convenio.o_otp_permi else []
     operaciones_otp = [mapeo_operaciones_otp.get(numero) for numero in numeros_operaciones_otp]
 
-    enlaces_certificados = {
-        cert.tipo_certificado.replace(" ", "_"): mapeo_certificados_formularios.get(cert.tipo_certificado, None)
-        for cert in confi_certificados
-    }
     return render(request, 'plantilla_convenio.html', {
         'convenio': convenio,
+        'certificados_con_nombre_y_formulario': certificados_con_nombre_y_formulario,
         'operaciones_certificado': operaciones_certificado,
         'operaciones_firmado': operaciones_firmado,
-        'mapeo_certificados_formularios': mapeo_certificados_formularios,
-        'operaciones_otp': operaciones_otp,
-        'enlaces_certificados': enlaces_certificados,
-        'confi_certificados': confi_certificados
+        'operaciones_otp': operaciones_otp
     
     })
 

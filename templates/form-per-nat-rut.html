@@ -128,11 +128,26 @@
     </div>   
 
 
-
+    
 
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-              
+    <script>
+
+        function goBack() {
+            window.history.back();
+        }    
+    
+    
+             $(document).ready(function() {
+                var convenio = JSON.parse(localStorage.getItem('convenio'));
+                if (convenio) {
+                    $('#topbar-container').css('background-color', convenio.color_primario);
+                    $('#convenio-nombre').text(convenio.nombre);
+                }
+            });
+    
+        </script>         
 </body>
 </html>
