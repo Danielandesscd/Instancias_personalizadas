@@ -37,11 +37,12 @@ urlpatterns = [
     path('plantilla_dinamica/<int:convenio_id>/', views.plantilla_dinamica, name='detalle_convenio'),
     path('plantilla_convenio/<int:id>/', views.plantilla_convenio, name='plantilla_convenio'),
     path('login_instancia/<int:convenio_id>/', views.login_instancia, name='login_instancia'),
-    path('formulario_certificado/', views.formulario_certificado, name='formulario_certificado'),
+    path('formulario_certificado/<int:id_convenio>/', views.formulario_certificado, name='formulario_certificado'),
+    path('guardar_certificado/', views.guardar_certificado, name='guardar_certificado'),
     path('formulario1/', views.formulario1, name='formulario1'),
     path('procesar-formulario/', views.procesar_formulario, name='procesar_formulario'),
-
     path('verificar_convenio/<int:convenio_id>/', views.verificar_convenio, name='verificar_convenio'),
+
     path('login_instancia/', views.login_instancia, name='login_instancia'),
 
 ]

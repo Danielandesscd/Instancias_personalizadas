@@ -1,11 +1,16 @@
 from http import client
 from django.shortcuts import render, redirect
+import psycopg2
 from suds.client import Client
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import CONFI_CERTIFICADOS, CONVENIO, TIPO_CERT
 from django.contrib.auth.hashers import make_password
 from zeep import Client
+import base64
+import hashlib
+import datetime
+import random
 from zeep.transports import Transport
 from requests.auth import HTTPBasicAuth
 import json
@@ -13,7 +18,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 import os
 from django.template import TemplateDoesNotExist
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError
 from django.http import JsonResponse
 from django.utils.encoding import force_str
 from django.views.decorators.csrf import csrf_exempt
@@ -79,32 +84,20 @@ def home(request):
 
 
 def plantilla_dinamica(request, convenio_id):
-    mapeo_tipos_certificado = {
-    "10": "Facturación Electrónica - Persona Jurídica",
-    "11": "Facturación Electrónica - Persona Natural",
-    "6": "Comunidad Académica",
-    "9": "Pertenencia Empresa",
-    "7": "Profesional Titulado",
-    "8": "Representante Legal",
-    "12": "Función Pública",
-    "13": "Persona Jurídica",
-    "14": "Función Pública para SIIF Nación",
-    "5": "Persona Natural",
-    "15": "Persona Natural Para Actividad Comercial(Rut)"
-}
+    
     
     mapeo_certificados_formularios = {
-        "10": 'form-fe-pj',
-        "11": 'form-fe-pn',
-        #"6": 'form-com-acad.html',
-        "9": 'form-pert-emp',
-        "7": 'form-prof-titu',
-        #"8": 'form-rep-legal.html',
-        #"12": 'form-func-pub.html',
-        "13": 'form-pers-jur',
-        #"14": 'form-func-pub-nacion.html',
-        "5": 'form-pers-nat',
-        "15": 'form-pers-nat-rut'
+        "Facturación Electrónica - Persona Jurídica": 'form-fe-pj',
+        "Facturación Electrónica - Persona Natural": 'form-fe-pn',
+        #"Comunidad Académica": 'form-com-acad.html',
+        "Pertenencia Empresa": 'form-pert-emp',
+        "Profesional Titulado": 'form-prof-titu',
+        #"Representante Legal": 'form-rep-legal.html',
+        #"Función Pública": 'form-func-pub.html',
+        "Persona Jurídica": 'form-pers-jur',
+        #""Función Pública para SIIF Nación": 'form-func-pub-nacion.html',
+        "Persona Natural": 'form-pers-nat',
+        "Persona Natural Para Actividad Comercial(Rut)": 'form-pers-nat-rut'
     }
 
     mapeo_operacion_cert = {
@@ -132,36 +125,43 @@ def plantilla_dinamica(request, convenio_id):
 
 
     convenio = get_object_or_404(CONVENIO, pk=convenio_id)
-    numeros_certificados = convenio.certificados_permi.split(',')  # Suponiendo que los números están separados por comas
-    certificados = [mapeo_tipos_certificado.get(numero) for numero in numeros_certificados]
-    
-    
-    formularios = [mapeo_certificados_formularios.get(numero) for numero in numeros_certificados]
-    print("formularios: ", formularios)
+    confi_certificados = CONFI_CERTIFICADOS.objects.filter(id_convenio=convenio.id)
+
+    for cert in confi_certificados:
+       
+        print("Tipo de Certificado:", cert.tipo_certificado) 
+          
+        print("---")  
+
+   
+    print("formularios: ", cert.tipo_certificado)
     print("color: ", convenio.color_primario)
     print("Nombre del convenio:", convenio.nombre)
     print("Color primario del convenio:", convenio.color_primario)
     
-    certificados_con_formularios = zip(certificados, formularios)
+  
 
-    
     numeros_operacion_cert = convenio.o_cert_permi.split(',') if convenio.o_cert_permi else []
     operaciones_certificado = [mapeo_operacion_cert.get(numero) for numero in numeros_operacion_cert]
 
-    
     numeros_operaciones_firmado = convenio.o_firmado_permi.split(',') if convenio.o_firmado_permi else []
     operaciones_firmado = [mapeo_operaciones_firmado.get(numero) for numero in numeros_operaciones_firmado]
 
-    
     numeros_operaciones_otp = convenio.o_otp_permi.split(',') if convenio.o_otp_permi else []
     operaciones_otp = [mapeo_operaciones_otp.get(numero) for numero in numeros_operaciones_otp]
 
+    enlaces_certificados = {
+        cert.tipo_certificado.replace(" ", "_"): mapeo_certificados_formularios.get(cert.tipo_certificado, None)
+        for cert in confi_certificados
+    }
     return render(request, 'plantilla_convenio.html', {
         'convenio': convenio,
-        'certificados_con_formularios': certificados_con_formularios,
         'operaciones_certificado': operaciones_certificado,
         'operaciones_firmado': operaciones_firmado,
-        'operaciones_otp': operaciones_otp
+        'mapeo_certificados_formularios': mapeo_certificados_formularios,
+        'operaciones_otp': operaciones_otp,
+        'enlaces_certificados': enlaces_certificados,
+        'confi_certificados': confi_certificados
     
     })
 
@@ -263,9 +263,9 @@ def guardar_convenios(request):
 
         certificados_seleccionados = [key for key, value in data.items() if value == 'on']
 
-        certificados_permi = ','.join(certificados_seleccionados)
+        tipo_certificado = ','.join(certificados_seleccionados)
 
-        convenio = CONVENIO(certificados_permi=certificados_permi)
+        convenio = CONFI_CERTIFICADOS(tipo_certificado=tipo_certificado)
         convenio.save()
 
         return JsonResponse({'message': 'Convenios guardados correctamente.'})
@@ -367,37 +367,67 @@ def crear_instancia(request):
 
         convenio.save()
         # Después de guardar los datos, obtenemos el id del convenio creado
-        #id_convenio = convenio.id
+        id_convenio = convenio.id
 
         # Redirigimos al usuario a formulario_certificado.html y pasamos el id del convenio como parte del contexto
-        return redirect('formulario_certificado') #id_convenio=id_convenio)
+        return redirect('formulario_certificado', id_convenio=id_convenio)
 
     return render(request, 'home.html')
 
-def formulario_certificado(request):#, id_convenio):
-    return render(request, 'formulario_certificado.html')
+def formulario_certificado(request, id_convenio):
+    convenio = get_object_or_404(CONVENIO, id=id_convenio)  # Verificamos que el id es válido
+    return render(request, 'formulario_certificado.html', {'convenio': convenio})
 
+@csrf_exempt  # Esto permite solicitudes POST sin protección CSRF (útil para pruebas pero cuidado en producción)
 def guardar_certificado(request):
-    if request.method == 'POST':
-        # Obtener datos del cuerpo de la solicitud
-        data = json.loads(request.body)
+    if request.method == "POST":
+        try:
+            # Obtener datos del cuerpo del POST
+            data = json.loads(request.body)
+            print("Datos recibidos en el servidor:", data)
 
-        # Obtener el objeto de convenio utilizando el ID pasado en la solicitud
-        convenio = get_object_or_404(CONVENIO, id=data['id_convenio'])
+            # Validar campos críticos
+            id_convenio = data.get("id_convenio")
+            tipo_certificado = data.get("tipoCertificado", "")
+            vigencias = data.get("vigencias", [])  # Convertir a lista de enteros
+            formatos = data.get("formatos", [])  # Convertir a lista de cadenas
 
-        # Crear un nuevo objeto de certificado asociado al convenio
-        nuevo_certificado = CONFI_CERTIFICADOS.objects.create(
-            id_convenio=convenio,
-            id_certificado=data['tipoCertificado'],
-            vigencias=data['vigencias'],
-            Formato=data['formatos']
-        )
-        
-        # Puedes enviar una respuesta JSON indicando que los datos se guardaron correctamente
-        return JsonResponse({'message': 'Datos guardados correctamente'})
+            # Validar existencia de `id_convenio`
+            if not id_convenio:
+                return JsonResponse({"error": "Falta id_convenio"}, status=400)
+
+            # Verificar que `vigencias` y `formatos` no estén vacíos
+            if not formatos:
+                return JsonResponse({"error": "Falta 'formatos'."}, status=400)
+            if not vigencias:
+                return JsonResponse({"error": "Falta 'vigencias'."}, status=400)
+
+            # Obtener el convenio
+            convenio = CONVENIO.objects.get(id=id_convenio)
+
+            # Crear el nuevo certificado
+            nuevo_certificado = CONFI_CERTIFICADOS(
+                id_convenio=convenio,
+                tipo_certificado=tipo_certificado,
+                vigencias=vigencias,  # Asegúrate de que sea lista de enteros
+                formatos=formatos  # Establece la lista correctamente
+            )
+
+            # Guardar el certificado
+            nuevo_certificado.save()
+
+            return JsonResponse({"message": "Datos guardados correctamente"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Datos mal formateados"}, status=400)
+        except CONVENIO.DoesNotExist:
+            return JsonResponse({"error": "El convenio no existe"}, status=404)
+        except Exception as e:
+            print("Error inesperado:", str(e))
+            return JsonResponse({"error": "Error inesperado al procesar la solicitud"}, status=500)
     else:
-        # Si no es una solicitud POST, devuelve un error
-        return JsonResponse({'error': 'Se espera una solicitud POST'})
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
 
 def formulario_instancia(request):
     return render(request, 'formulario.html')
@@ -421,20 +451,84 @@ def campos_form(request):
     print("departamentos:", departamentos)  # Imprimirá los departamentos en la terminal
     return render(request, 'campos-form.html', {'departamentos': departamentos})
 
+
+def obtener_conexion_db():
+    return psycopg2.connect(
+        dbname=settings.DATABASES["default"]["NAME"],
+        user=settings.DATABASES["default"]["USER"],
+        password=settings.DATABASES["default"]["PASSWORD"],
+        host=settings.DATABASES["default"]["HOST"],
+        port=settings.DATABASES["default"]["PORT"],
+    )
+
+
+def obtener_credenciales():
+    conn = obtener_conexion_db()  
+    cursor = conn.cursor()
+
+    
+    cursor.execute("SELECT usuario_weservice, contraseña_webservice FROM CONVENIO LIMIT 1")
+    credenciales = cursor.fetchone()  
+
+    
+    conn.close()
+
+    if credenciales:
+        usuario, contraseña = credenciales  
+        return usuario, contraseña
+    else:
+        raise ValueError("No se encontraron credenciales en la base de datos.")
+
+
+def crear_cabecera_soap():
+    Username, password = obtener_credenciales()
+
+    # Generar 'created'
+    tm_created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    # Generar 'nonce'
+    simple_nonce = random.randint(0, 1000000)  
+    encoded_nonce = base64.b64encode(str(simple_nonce).encode()).decode()
+
+    # Calcular 'password digest'
+    passdigest = base64.b64encode(
+        hashlib.sha1(f"{simple_nonce}{tm_created}{password}".encode()).digest()
+    ).decode()
+
+    # Crear la cabecera SOAP
+    cabecera = f"""
+    <soapenv:Header>
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+            <wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713">
+                <wsse:Username>{Username}</wsse:Username>
+                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">{passdigest}</wsse:Password>
+                <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">{encoded_nonce}</wsse:Nonce>
+                <wsu:Created>{tm_created}</wsu:Created>
+            </wsse:UsernameToken>
+        </wsse:Security>
+    </soapenv:Header>
+    """
+    
+    return cabecera
+
 def obtener_departamentos():
     url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+    # Crea la cabecera SOAP
+    cabecera = crear_cabecera_soap()
 
-    payload = """
-    <soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-       <soapenv:Header><wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713"><wsse:Username>PAAN</wsse:Username><wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">WEJdNHmFGnOeCnqNc/vIXRyJafs=</wsse:Password><wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">+fJQ1IEmt2xbAZooSaCNew==</wsse:Nonce><wsu:Created>2024-03-14T13:12:42.268Z</wsu:Created></wsse:UsernameToken></wsse:Security></soapenv:Header>
-       <soapenv:Body>
-          <and:DepartamentoRequest>
-             <and:cadena/>
-          </and:DepartamentoRequest>
-       </soapenv:Body>
+    body = """
+    <soapenv:Body>
+        <and:DepartamentoRequest>
+            <and:cadena/>
+        </and:DepartamentoRequest>
+    </soapenv:Body>
+    """
+    payload = f"""
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
+        {cabecera}
+        {body}
     </soapenv:Envelope>
     """
-
     headers = {
       'Content-Type': 'text/xml'
     }
@@ -442,18 +536,16 @@ def obtener_departamentos():
     try:
         # Realiza la solicitud SOAP
         response = requests.post(url, headers=headers, data=payload)
-        response.raise_for_status()  # Lanza una excepción si la solicitud falla (por ejemplo, código de estado HTTP diferente de 200)
+        response.raise_for_status() 
         
-        # Analiza la respuesta XML para obtener los departamentos
+      
         root = ET.fromstring(response.content)
         mensaje = root.find(".//{http://www.andesscd.com.co/}mensaje").text
         departamentos = json.loads(mensaje)
         
-        # Devuelve los departamentos obtenidos de la respuesta SOAP
         return departamentos
     
     except requests.exceptions.RequestException as e:
-        # Manejo de errores en caso de fallo de la solicitud SOAP
         return {'error': str(e)}
     
 

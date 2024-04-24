@@ -115,151 +115,208 @@
             </tbody>
         </table>
     </div>
+    <input type="hidden" id="id_convenio" name="id_convenio" value="{{ id_convenio }}">
+
 
     <!-- Bootstrap JS y jQuery (necesarios para el funcionamiento del modal) -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    
     <script>
-        // Función para traducir los IDs de vigencia a textos deseados
-        function traducirVigencia(id) {
-            switch (id) {
-                case '1':
-                    return '1 día';
-                case '2':
-                    return '1 mes';
-                case '3':
-                    return '3 meses';
-                case '4':
-                    return '6 meses';
-                case '5':
-                    return '1 año';
-                case '6':
-                    return '2 años';
-                default:
-                    return '';
-            }
-        }
         
-        // Variable para almacenar la referencia a la fila que se está editando
-        let filaEditando = null;
-    
-        // Función para abrir la modal y cargar datos para editar
-        function abrirModalEditar(tipoCertificado, fila) {
-            // Guardar la referencia a la fila que se está editando
-            filaEditando = fila;
-            // Aquí puedes realizar cualquier acción adicional que necesites para editar, como cargar datos en la modal
-            console.log('Editar certificado:', tipoCertificado);
-            // Abre la modal
-            $('#certificadoModal').modal('show');
-        }
-    
-        // Función para agregar un certificado a la tabla y cerrar el modal
-        function agregarCertificado() {
-            const tipoCertificado = document.getElementById('tipoCertificado').value;
-            const vigenciasSeleccionadas = [];
-            const vigenciasCheckboxes = document.querySelectorAll('[id^="vigencia"]');
-            vigenciasCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    vigenciasSeleccionadas.push(checkbox.value);
-                }
-            });
-    
-            // Obtener textos de vigencia en lugar de IDs
-            const vigenciaTextos = vigenciasSeleccionadas.map(traducirVigencia);
-    
-            const formatosSeleccionados = [];
-            const formatosCheckboxes = document.querySelectorAll('[id^="formato"]');
-            formatosCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    formatosSeleccionados.push(checkbox.value);
-                }
-            });
-    
-            if (filaEditando) {
-                // Actualizar los datos de la fila existente en lugar de agregar una nueva fila
-                filaEditando.cells[0].textContent = tipoCertificado;
-                filaEditando.cells[1].textContent = vigenciaTextos.join(', ');
-                filaEditando.cells[2].textContent = formatosSeleccionados.join(', ');
-    
-                // Limpiar la referencia a la fila que se está editando
-                filaEditando = null;
-            } else {
-                // Crear nueva fila para la tabla
-                const newRow = document.createElement('tr');
-    
-                // Crear celdas para la fila
-                const tipoCertificadoCell = document.createElement('td');
-                tipoCertificadoCell.textContent = tipoCertificado;
-    
-                const vigenciaCell = document.createElement('td');
-                vigenciaCell.textContent = vigenciaTextos.join(', ');
-    
-                const formatoCell = document.createElement('td');
-                formatoCell.textContent = formatosSeleccionados.join(', ');
-    
-                const accionCell = document.createElement('td');
-    
-                // Crear botones de editar y eliminar
-                const editarBtn = document.createElement('button');
-                editarBtn.textContent = 'Editar';
-                editarBtn.classList.add('btn', 'btn-info', 'mr-2');
-                // Asignar manejador de eventos para abrir la modal de edición
-                editarBtn.onclick = function() {
-                    abrirModalEditar(tipoCertificado, newRow);
-                };
-    
-                const eliminarBtn = document.createElement('button');
-                eliminarBtn.textContent = 'Eliminar';
-                eliminarBtn.classList.add('btn', 'btn-danger');
-                eliminarBtn.onclick = function() {
-                    newRow.remove();
-                };
-    
-                // Agregar botones a la celda de acción
-                accionCell.appendChild(editarBtn);
-                accionCell.appendChild(eliminarBtn);
-    
-                // Agregar celdas a la fila
-                newRow.appendChild(tipoCertificadoCell);
-                newRow.appendChild(vigenciaCell);
-                newRow.appendChild(formatoCell);
-                newRow.appendChild(accionCell);
-    
-                // Agregar fila a la tabla
-                document.getElementById('certificadosTableBody').appendChild(newRow);
+        // Función para obtener cookies por nombre
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === name) {
+                return value;
             }
-    
-            // Cerrar el modal
-            $('#certificadoModal').modal('hide');
-    
-            // Envía los datos al backend mediante una solicitud POST
-            fetch('/guardar_certificado/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken') // Asegúrate de incluir el token CSRF si estás usando Django
-                },
-                body: JSON.stringify({
-                    tipoCertificado: tipoCertificado,
-                    vigencias: vigenciasSeleccionadas,
-                    formatos: formatosSeleccionados
-                })
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Aquí puedes hacer algo después de que los datos se guarden correctamente
-                    console.log('Datos guardados correctamente');
-                    // Puedes redirigir al usuario o hacer cualquier otra acción necesaria
-                } else {
-                    console.error('Error al guardar los datos');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
         }
+        return null; // Si no se encuentra la cookie
+    }
+
+    // Función para traducir los IDs de tipo de certificado a nombres
+    function traducirCertificado(id) {
+        switch (id) {
+            case '10':
+                return 'Facturación Electrónica - Persona Jurídica';
+            case '11':
+                return 'Facturación Electrónica - Persona Natural';
+            case '6':
+                return 'Comunidad Académica';
+            case '9':
+                return 'Pertenencia Empresa';
+            case '7':
+                return 'Profesional Titulado';
+            case '8':
+                return 'Representante Legal';
+            case '12':
+                return 'Función Pública';
+            case '13':
+                return 'Persona Jurídica';
+            case '14':
+                return 'Función Pública para SIIF Nación';
+            case '5':
+                return 'Persona Natural';
+            case '15':
+                return 'Persona Natural Para Actividad Comercial(Rut)';
+            default:
+                return '';
+        }
+    }
+
+    // Función para traducir los IDs de vigencia a nombres
+    function traducirVigencia(id) {
+        switch (id) {
+            case '1':
+                return '1 día';
+            case '2':
+                return '1 mes';
+            case '3':
+                return '3 meses';
+            case '4':
+                return '6 meses';
+            case '5':
+                return '1 año';
+            case '6':
+                return '2 años';
+            default:
+                return '';
+        }
+    }
+
+    // Variable para almacenar la referencia a la fila que se está editando
+    let filaEditando = null;
+
+    // Función para abrir el modal y cargar datos para editar
+    function abrirModalEditar(tipoCertificado, fila) {
+        filaEditando = fila; // Guarda la fila que se está editando
+        console.log('Editar certificado:', tipoCertificado); // Esto es solo para depuración
+        $('#certificadoModal').modal('show'); // Abre el modal
+    }
+
+    // Función para agregar o editar un certificado
+    function agregarCertificado() {
+        const tipoCertificado = traducirCertificado(document.getElementById('tipoCertificado').value);
+
+        // Obtén las vigencias seleccionadas
+        const vigenciasSeleccionadas = [];
+        const vigenciasCheckboxes = document.querySelectorAll('[id^="vigencia"]');
+        vigenciasCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                vigenciasSeleccionadas.push(checkbox.value);
+            }
+        });
+
+        // Convierte a nombres usando la función de traducción
+        const vigenciaTextos = vigenciasSeleccionadas.map(traducirVigencia);
+
+        // Obtén los formatos seleccionados
+        const formatosSeleccionados = [];
+        const formatosCheckboxes = document.querySelectorAll('[id^="formato"]');
+        formatosCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                formatosSeleccionados.push(checkbox.value);
+            }
+        });
+
+        if (filaEditando) {
+            // Actualiza la fila existente
+            filaEditando.cells[0].textContent = tipoCertificado;
+            filaEditando.cells[1].textContent = vigenciaTextos.join(', ');
+            filaEditando.cells[2].textContent = formatosSeleccionados.join(', ');
+
+            filaEditando = null; // Limpia la referencia
+        } else {
+            // Crea una nueva fila para agregar a la tabla
+            const newRow = document.createElement('tr');
+
+            // Celdas de la fila
+            const tipoCertificadoCell = document.createElement('td');
+            tipoCertificadoCell.textContent = tipoCertificado;
+
+            const vigenciaCell = document.createElement('td');
+            vigenciaCell.textContent = vigenciaTextos.join(', ');
+
+            const formatoCell = document.createElement('td');
+            formatoCell.textContent = formatosSeleccionados.join(', ');
+
+            const accionCell = document.createElement('td');
+
+            // Botones para editar y eliminar
+            const editarBtn = document.createElement('button');
+            editarBtn.textContent = 'Editar';
+            editarBtn.classList.add('btn', 'btn-info', 'mr-2');
+            editarBtn.onclick = function() {
+                abrirModalEditar(tipoCertificado, newRow);
+            };
+
+            const eliminarBtn = document.createElement('button');
+            eliminarBtn.textContent = 'Eliminar';
+            eliminarBtn.classList.add('btn', 'btn-danger');
+            eliminarBtn.onclick = function() {
+                newRow.remove();
+            };
+
+            // Añade los botones a la celda de acción
+            accionCell.appendChild(editarBtn);
+            accionCell.appendChild(eliminarBtn);
+
+            // Añade las celdas a la fila
+            newRow.appendChild(tipoCertificadoCell);
+            newRow.appendChild(vigenciaCell);
+            newRow.appendChild(formatoCell);
+            newRow.appendChild(accionCell);
+
+            // Agrega la fila a la tabla
+            document.getElementById('certificadosTableBody').appendChild(newRow);
+        }
+
+        // Cerrar el modal después de agregar/editar
+        $('#certificadoModal').modal('hide');
+        
+        const path = window.location.pathname;
+        const parts = path.split('/');
+
+        // El valor debería ser el penúltimo elemento si la URL termina con '/'
+        const id_convenio = parts[parts.length - 2];
+        // Enviar datos al backend mediante POST para guardar
+        fetch('/guardar_certificado/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Obtiene el token CSRF
+            },
+            body: JSON.stringify({
+                id_convenio: id_convenio,
+                tipoCertificado: tipoCertificado,
+                vigencias: vigenciasSeleccionadas,
+                formatos: formatosSeleccionados
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Datos guardados correctamente');
+            } else {
+                console.error('Error al guardar los datos');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Escuchar cuando el DOM esté completamente cargado para asignar eventos
+    document.addEventListener('DOMContentLoaded', function() {
+        const guardarButton = document.querySelector('.modal-footer .btn-primary');
+        if (guardarButton) {
+            guardarButton.onclick = agregarCertificado; // Asigna la función para el botón "Guardar"
+        }
+    });
+
+            
     </script>
     
     

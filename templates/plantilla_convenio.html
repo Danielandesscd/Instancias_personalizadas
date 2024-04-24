@@ -94,6 +94,22 @@ nav.navbar {
 
 </style>
 
+<script>
+  
+  var convenio= {
+      id: "{{ convenio.id }}",
+      nombre: "{{ convenio.nombre }}",
+      color_primario: "{{ convenio.color_primario }}",
+      
+  };
+
+  localStorage.setItem('convenio', JSON.stringify(convenio));
+
+  function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = "/home";
+        }
+</script>
 
 
 <body>
@@ -102,6 +118,7 @@ nav.navbar {
       <p>{{ convenio.nombre }}</p> 
       <div>
         <a href="{% url 'home' %}" class="btn btn-dark">Atrás</a>
+        <button onclick="cerrarSesion()" class="btn btn-dark">Cerrar Sesión</button>
       </div>
 
     </div>
@@ -114,14 +131,27 @@ nav.navbar {
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Solicitud De Certificado
           </a>
+         
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <ul>
-                {% for certificado, formulario in certificados_con_formularios %}
-                    <li><a href="{% url 'detalle_convenio' convenio.id %}">{{ certificado }}</a></li>
+                {% for cert in confi_certificados %}
+                    {% with enlaces_certificados as enlaces %}
+                        {% with enlaces.cert_tipo_certificado as form_name %}
+                            {% if form_name %}
+                                <li>
+                                    <a href="{% url form_name %}">{{ cert.tipo_certificado }}</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <span>{{ cert.tipo_certificado }} (no disponible)</span>
+                                </li>
+                            {% endif %}
+                        {% endwith %}
+                    {% endwith %}
                 {% endfor %}
-          </ul>
+            </ul>
         </div>
-        </li>
+        
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Operaciones De Certificado
@@ -164,7 +194,7 @@ nav.navbar {
     </div>
   </nav>
   </div>
-  <img id="imagen_banner" src="{{ convenio.imagen_banner }}" alt="{{ convenio.nombre }} logo" >
+  <!--<img id="imagen_banner" src="{{ convenio.imagen_banner }}" alt="{{ convenio.nombre }} logo" >-->
 
 <footer>Carrera 27 No. 86 - 43 Bogotá, Colombia <br> PBX 7953430 -3816776 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
 
@@ -172,5 +202,9 @@ nav.navbar {
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+
+
 </body>
 </html>

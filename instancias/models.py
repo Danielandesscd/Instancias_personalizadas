@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.postgres.fields import ArrayField
+
 
 class DATOS(models.Model):
     id = models.AutoField(primary_key=True)
@@ -25,11 +27,6 @@ class DATOS(models.Model):
     matricula_profesional = models.CharField(max_length=100)
     pin = models.CharField(max_length=100)
 
-class CONFI_CERTIFICADOS(models.Model):
-    id_convenio = models.IntegerField
-    id_certificado = models.IntegerField
-    vigencias = models.IntegerField
-    Formato = models.IntegerField
     
     
 class SOLICITUD_CERT(models.Model):
@@ -100,6 +97,14 @@ class CONVENIO(models.Model):
         super().save(*args, **kwargs)
 
     
+
+class CONFI_CERTIFICADOS(models.Model):
+    id_convenio = models.ForeignKey(CONVENIO, on_delete=models.CASCADE)  # Clave foránea
+    tipo_certificado = models.CharField(max_length=255)
+    
+    vigencias = ArrayField(models.IntegerField())  # Puede almacenar listas de enteros
+    formatos = ArrayField(models.CharField(max_length=255))  
+
 class FORMATO_ENTREGA(models.Model):
     id = models.AutoField(primary_key=True)
     nombre_formato=models.CharField
@@ -113,8 +118,3 @@ class VIGENCIA(models.Model):
     id_cert = models.IntegerField()
 
 
-class CONFI_CERTIFICADOS(models.Model):
-    id_convenio = models.IntegerField
-    id_certificado = models.IntegerField
-    vigencias = models.IntegerField
-    Formato = models.IntegerField
