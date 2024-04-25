@@ -1,0 +1,77 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
+    <link rel="icon" type="imagen" href="static/icono.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>Home</title>
+    <form action="{% url 'cerrar_sesion' %}" method="post">
+        {% csrf_token %}
+
+</head>
+<body>
+    <div id="cont-principal" class="container col-12 col-sm-10 col-md-10 col-lg-8 mx-auto ">  
+        <div class="d-flex justify-content-end align-items-start ">
+            <a href="{% url 'cerrar_sesion' %}" class="btn btn-primary me-md-2">Cerrar Sesión</a>
+        </div>
+        <img id="logo" src="https://www.andesscd.com.co/wp-content/uploads/2023/02/Firma.gif" alt="andesSCD" width="250" >  
+        <div class="list-group container-flex"  >
+            <div class="container">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'formulario' %}" class="btn btn-primary me-md-2">Crear Instancia</a>
+                    <a href="{% url 'instancia' %}" class="btn btn-primary me-md-2">Ir a Instancia  de Prueba</a>
+                </div>
+            </div>
+            <div class="container mt-3">
+                <div class="list-group">
+                    {% for convenio in convenios %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'verificar_convenio' convenio.id %}">{{ convenio.nombre }}</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+                <!--<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                    id="dropdownMenuLink{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink{{ forloop.counter }}">
+                    <li><a class="dropdown-item" href="#">Editar</a></li>
+                    <li><a class="dropdown-item" href="#">Eliminar</a></li>
+                </ul>-->
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        <br>
+        <br>
+        <br>
+            
+            
+            
+            
+    <script>
+        document.getElementById("crear").addEventListener("click", function() {
+            
+            window.location.href = "formulario.html";
+        });
+    </script>
+    
+
+    <footer>Ac 26 # 69c 03 Torre B Of 701 Edificio Capital Center II <br> Bogotá, Colombia | PBX +601 241 5539 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
+</body>
+</html>
