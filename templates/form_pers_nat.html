@@ -99,7 +99,8 @@
             <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
                     <h2 class="mb-0"><b> Solicitud Certificado Persona Natural</b></h2>
                     <div class="mb-3">
-                    <form>
+                        <form action="{% url 'crear_cabecera_soap' %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
                         <br>
                             <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
                             <select class="form-select" id="tipo-documento" name="tipo-documento">
@@ -172,7 +173,10 @@
                             <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                         </div>
                         <br>
-                        <button type="submit" class="btn btn-primary">Solicitar Certificado</button>
+                        <form action="{% url 'crear_cabecera_soap' %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Solicitar Certificado</button>
+                        </form>
                         <br>
                     </form>
                     <br>
@@ -181,6 +185,36 @@
         </div>
     </div>   
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Función para cargar los departamentos cuando se haga clic en el campo
+        $('#departamento').on('click', function() {
+            obtenerDepartamentos();
+        });
+
+        // Función para obtener los departamentos
+        function obtenerDepartamentos() {
+            $.ajax({
+                url: "https://ra.andesscd.com.co/test/WebService/soap-server_new.php",
+                type: 'GET',
+                success: function(response) {
+                    // Actualizar el campo de departamento con los datos recibidos
+                    $('#departamento').empty();
+                    $.each(response.departamentos, function(index, departamento) {
+                        $('#departamento').append($('<option>', {
+                            value: departamento.id_departamento,
+                            text: departamento.nombre
+                        }));
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al obtener departamentos:", error);
+                }
+            });
+        }
+    });
+</script>
 
 
 

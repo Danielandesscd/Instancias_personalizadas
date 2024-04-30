@@ -9,6 +9,7 @@ from django.views.generic import TemplateView
 
 
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
@@ -20,7 +21,7 @@ urlpatterns = [
     path('formulario/', views.formulario_instancia, name='formulario'),
     path('cerrar-sesion/', auth_views.LogoutView.as_view(next_page='inicio'), name='cerrar_sesion'),
     path('crear_instancia/', views.crear_instancia, name='crear_instancia'),
-    path('guardar_convenios/', views.guardar_convenios, name='guardar_convenios'),
+    #path('guardar_convenios/', views.guardar_convenios, name='guardar_convenios'),
     path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
     path('form_pers_nat/', views.form_pers_nat, name='form_pers_nat'),
     path('form_pers_jur/', views.form_pers_jur, name='form_pers_jur'),
@@ -43,6 +44,9 @@ urlpatterns = [
     path('procesar-formulario/', views.procesar_formulario, name='procesar_formulario'),
     path('verificar_convenio/<int:convenio_id>/', views.verificar_convenio, name='verificar_convenio'),
     path('login_instancia/', views.login_instancia, name='login_instancia'),
+    path('credenciales_webservice/', views.credenciales_webservice, name='credenciales_webservice'),
+    path('crear_cabecera_soap/', views.crear_cabecera_soap, name='crear_cabecera_soap'),
+
 
 ]
 

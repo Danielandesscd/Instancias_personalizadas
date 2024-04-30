@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.models import User
 
 
 class DATOS(models.Model):
@@ -76,7 +77,8 @@ class CONVENIO(models.Model):
     color_primario = models.CharField(max_length=100)
     color_secundario = models.CharField(max_length=100)
     id_vigenica = models.IntegerField(null=True)
-    
+    id_user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='CONVENIO')
+
     imagen_banner = models.ImageField(upload_to='banners/', blank=True, null=True)
     contraseña_convenio = models.TextField(blank=True, null=True)
     usuario_weservice = models.CharField(max_length=100, null=True)
@@ -101,10 +103,9 @@ class CONVENIO(models.Model):
 class CONFI_CERTIFICADOS(models.Model):
     id_convenio = models.ForeignKey(CONVENIO, on_delete=models.CASCADE)  # Clave foránea
     tipo_certificado = models.CharField(max_length=255)
-    
-    
     vigencias = ArrayField(models.IntegerField())  # Puede almacenar listas de enteros
-    formatos = ArrayField(models.CharField(max_length=255))  
+    formatos = ArrayField(models.CharField(max_length=255)) 
+     
 
 class FORMATO_ENTREGA(models.Model):
     id = models.AutoField(primary_key=True)

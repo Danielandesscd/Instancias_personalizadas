@@ -34,6 +34,8 @@ from django.shortcuts import render, get_object_or_404
 import hashlib
 from django.contrib.auth import logout
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 
 def inicio(request):
@@ -218,6 +220,8 @@ def login_instancia(request, convenio_id):
 
 
 
+
+
 def consultar(request):
     return render (request, 'consultar_cert.html')
 
@@ -276,21 +280,21 @@ def procesar_formulario_convenio(request):
 
 
 
-@csrf_exempt
-def guardar_convenios(request):
-    if request.method == 'POST':
-        data = request.POST.dict()
+# @csrf_exempt
+# def guardar_convenios(request):
+#     if request.method == 'POST':
+#         data = request.POST.dict()
 
-        certificados_seleccionados = [key for key, value in data.items() if value == 'on']
+#         certificados_seleccionados = [key for key, value in data.items() if value == 'on']
 
-        tipo_certificado = ','.join(certificados_seleccionados)
+#         tipo_certificado = ','.join(certificados_seleccionados)
 
-        convenio = CONFI_CERTIFICADOS(tipo_certificado=tipo_certificado)
-        convenio.save()
+#         convenio = CONFI_CERTIFICADOS(tipo_certificado=tipo_certificado)
+#         convenio.save()
 
-        return JsonResponse({'message': 'Convenios guardados correctamente.'})
+#         return JsonResponse({'message': 'Convenios guardados correctamente.'})
 
-    return JsonResponse({'error': 'Se esperaba una solicitud POST.'}, status=400)
+#     return JsonResponse({'error': 'Se esperaba una solicitud POST.'}, status=400)
 
 def instancia_empresa(request, nombre_empresa):
     template_name = f'instancia_empresas/{nombre_empresa}.html'
@@ -312,6 +316,7 @@ def crear_instancia(request):
         usuario_weservice = request.POST.get('usuario_weservice')
         contraseña_webservice = request.POST.get('contraseña_webservice')
         contraseña_convenio = request.POST.get('contraseña')
+        
 
         contraseña_convenio_encriptada = make_password(contraseña_convenio)
         print("Contenido de request.POST:", request.POST)
@@ -366,6 +371,10 @@ def crear_instancia(request):
         
         formatos_entrega_permi = ','.join(filter(None, [token_virtual, token_fisico, pkcs10]))
 
+
+        user = User.objects.create_user(username=usuario_weservice, password=contraseña_webservice)
+
+
         convenio = CONVENIO.objects.create(
             nombre=nombre,
             logo=logo,
@@ -383,8 +392,12 @@ def crear_instancia(request):
             o_otp_permi=o_otp_permi,
             vigencias_permi=vigencias_permi,
             formatos_entrega_permi=formatos_entrega_permi,
+            id_user = user
         )
 
+        
+
+        convenio.usuario = user
         convenio.save()
         # Después de guardar los datos, obtenemos el id del convenio creado
         id_convenio = convenio.id
@@ -482,32 +495,41 @@ def obtener_conexion_db():
     )
 
 
-def obtener_credenciales():
-    conn = obtener_conexion_db()  
-    cursor = conn.cursor()
+@login_required
+def credenciales_webservice(request):
+    if request.method == "POST":
+        user = request.user
+        
+        try:
+            convenios = user.CONVENIO.all()
+            
+            if convenios.exists():
+                convenio = convenios.first()  # Obtener el primer convenio
+                usuario_webservice = convenio.usuario_weservice
+                contrasena_webservice = convenio.contraseña_webservice
 
+                print("Usuario Webservice antes de llamar a crear_cabecera_soap:", usuario_webservice)
+                print("Contraseña Webservice antes de llamar a crear_cabecera_soap:", contrasena_webservice)
+                cabecera_soap = crear_cabecera_soap("TestUser", "TestPassword")
+                print("Cabecera SOAP:", cabecera_soap)
+
+                return JsonResponse({'status': 'success'})
+
+            else:
+                return JsonResponse({'status': 'error', 'message': 'No se encontró ningún convenio para este usuario'})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
     
-    cursor.execute("SELECT usuario_weservice, contraseña_webservice FROM CONVENIO LIMIT 1")
-    credenciales = cursor.fetchone()  
-
-    
-    conn.close()
-
-    if credenciales:
-        usuario, contraseña = credenciales  
-        return usuario, contraseña
-    else:
-        raise ValueError("No se encontraron credenciales en la base de datos.")
+    return redirect('home')
 
 
-def crear_cabecera_soap():
-    Username, password = obtener_credenciales()
-
+def crear_cabecera_soap(username, password):
     # Generar 'created'
     tm_created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Generar 'nonce'
-    simple_nonce = random.randint(0, 1000000)  
+    simple_nonce = random.randint(0, 1000000)
     encoded_nonce = base64.b64encode(str(simple_nonce).encode()).decode()
 
     # Calcular 'password digest'
@@ -520,7 +542,7 @@ def crear_cabecera_soap():
     <soapenv:Header>
         <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
             <wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713">
-                <wsse:Username>{Username}</wsse:Username>
+                <wsse:Username>{username}</wsse:Username>
                 <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">{passdigest}</wsse:Password>
                 <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">{encoded_nonce}</wsse:Nonce>
                 <wsu:Created>{tm_created}</wsu:Created>
