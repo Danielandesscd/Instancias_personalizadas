@@ -137,7 +137,9 @@ nav.navbar {
                 {% if certificados_con_nombre_y_formulario %}
                     {% for certificado in certificados_con_nombre_y_formulario %}
                         <li>
-                            <a href="{{ certificado.formulario }}">{{ certificado.tipo_certificado }}</a>
+                            
+                            <a href="/{{ certificado.formulario }}">{{ certificado.tipo_certificado }}</a>
+
                         </li>
                     {% endfor %}
                 {% else %}

@@ -102,6 +102,7 @@ class CONFI_CERTIFICADOS(models.Model):
     id_convenio = models.ForeignKey(CONVENIO, on_delete=models.CASCADE)  # Clave foránea
     tipo_certificado = models.CharField(max_length=255)
     
+    
     vigencias = ArrayField(models.IntegerField())  # Puede almacenar listas de enteros
     formatos = ArrayField(models.CharField(max_length=255))  
 
