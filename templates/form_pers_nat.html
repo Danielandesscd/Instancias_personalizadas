@@ -59,29 +59,9 @@
 
 <body>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#departamento').change(function() {
-                $.ajax({
-                    url: "{% url 'obtener_departamentos' %}",
-                    type: 'GET',
-                    success: function(response) {
-                        // Actualizar el campo de departamento con los datos recibidos
-                        $('#departamento').empty();
-                        $.each(response.departamentos, function(index, departamento) {
-                            $('#departamento').append($('<option>', {
-                                value: departamento.id_departamento,
-                                text: departamento.nombre
-                            }));
-                        });
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error al obtener departamentos:", error);
-                    }
-                });
-            });
-        });
-    </script>
+
+    
+    
 
 
     
@@ -98,13 +78,14 @@
         <div class="row">
             <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
                     <h2 class="mb-0"><b> Solicitud Certificado Persona Natural</b></h2>
+                    
                     <div class="mb-3">
-                        <form action="{% url 'crear_cabecera_soap' %}" method="POST" enctype="multipart/form-data">
+                        <form action="{% url 'radicado_pers_nat' %}" method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
                         <br>
                             <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
                             <select class="form-select" id="tipo-documento" name="tipo-documento">
-                                <option value="cc">CC</option>
+                                <option value="1">CC</option>
                                 <option value="nit">CE</option>
                                 <option value="nit">NIT</option>
                                 <option value="pasaporte">Pasaporte</option>
@@ -124,16 +105,15 @@
                         </div>
                         <div class="mb-3">
                             <label for="departamento" class="form-label"><b>Departamento</b></label>
-                            <select class="form-control" id="departamento" name="departamento">
-                                <!-- Iterar sobre la lista de departamentos y generar opciones -->
-                                {% for departamento in departamentos %}
-                                    <option value="{{ departamento.id_departamento }}"></option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="municipio" class="form-label"><b>Municipio</b></label>
-                            <input type="text" class="form-control" id="municipio" name="municipio">
+                                <select id="departamento" name="departamento">
+                                    <option value="">Seleccione un departamento</option> 
+                                </select>
+                          </div>
+                          <div class="mb-3"> 
+                            <label for="municipio" class="form-label"><b>Municipio</b></label> 
+                            <select id="municipio" name="municipio"> 
+                                <option value="">Seleccione un municipio</option> 
+                            </select> 
                         </div>
                         <div class="mb-3">
                             <label for="direccion" class="form-label"><b>Dirección</b></label>
@@ -154,18 +134,20 @@
                         <div class="mb-3">
                             <label for="vigencia" class="form-label"><b>Vigencia</b></label>
                             <select class="form-select" id="vigencia" name="vigencia">
-                                <option value="1-dia">1 Día</option>
-                                <option value="1-mes">1 Mes</option>
-                                <option value="3-meses">3 Meses</option>
-                                <option value="6-meses">6 Meses</option>
-                                <option value="1-ano">1 Año</option>
-                                <option value="2-anos">2 Años</option>
+                                <option value="">1 Día</option>
+                                <option value="">1 Mes</option>
+                                <option value="">3 Meses</option>
+                                <option value="2">6 Meses</option>
+                                <option value="3">1 Año</option>
+                                <option value="">2 Años</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="formato-entrega" class="form-label"><b>Formato de Entrega</b></label>
                             <select class="form-select" id="formato-entrega" name="formato-entrega">
-                                <option value="pkcs10">PKCS10</option>
+                                <option value="3">PKCS10</option>
+                                <option value="4">Token virtual</option>
+                                <option value="2">Token Fisico</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -173,7 +155,7 @@
                             <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                         </div>
                         <br>
-                        <form action="{% url 'crear_cabecera_soap' %}" method="POST" enctype="multipart/form-data">
+                        <form action="{% url 'radicado_pers_nat' %}" method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary">Solicitar Certificado</button>
                         </form>
@@ -186,56 +168,111 @@
     </div>   
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        // Función para cargar los departamentos cuando se haga clic en el campo
-        $('#departamento').on('click', function() {
-            obtenerDepartamentos();
-        });
-
-        // Función para obtener los departamentos
-        function obtenerDepartamentos() {
-            $.ajax({
-                url: "https://ra.andesscd.com.co/test/WebService/soap-server_new.php",
-                type: 'GET',
-                success: function(response) {
-                    // Actualizar el campo de departamento con los datos recibidos
-                    $('#departamento').empty();
-                    $.each(response.departamentos, function(index, departamento) {
-                        $('#departamento').append($('<option>', {
-                            value: departamento.id_departamento,
-                            text: departamento.nombre
-                        }));
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al obtener departamentos:", error);
-                }
-            });
-        }
-    });
-</script>
-
-
-
-
+   
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
     <script>
-
-        function goBack() {
-            window.history.back();
-        }    
+        $(document).ready(function() { 
+            // Evento para cargar departamentos al hacer clic en el campo de selección
+            $('#departamento').on('click', function() { 
+                // Comprobar si el campo ya tiene opciones para evitar recargar 
+                if ($(this).children('option').length > 1) { 
+                    return; // Ya está cargado 
+                } 
     
+                // Solicitud AJAX para obtener departamentos 
+                $.ajax({ 
+                    url: '/obtener_departamentos/', // Verifica que esta URL sea correcta 
+                    method: 'GET', 
+                    success: function(data) { 
+                        if (data.status === 'success') { 
+                            var departamentos = data.departamentos; 
     
-             $(document).ready(function() {
-                var convenio = JSON.parse(localStorage.getItem('convenio'));
-                if (convenio) {
-                    $('#topbar-container').css('background-color', convenio.color_primario);
-                    $('#convenio-nombre').text(convenio.nombre);
-                }
+                            // Limpiar las opciones existentes excepto la primera 
+                            $('#departamento').children('option:not(:first)').remove(); 
+    
+                            // Agregar nuevas opciones al campo de selección 
+                            departamentos.forEach(function(departamento) { 
+                                $('#departamento').append(`<option value="${departamento.id_departamento}">${departamento.nombre}</option>`); 
+                            }); 
+                        } 
+                    }, 
+                    error: function() { 
+                        console.error("Error al cargar los departamentos."); 
+                    } 
+                }); 
+            }); 
+    
+            // Evento para cargar municipios al seleccionar un departamento 
+            $('#departamento').on('change', function() { 
+                var departamento_id = $(this).val(); // Obtener el ID del departamento seleccionado 
+    
+                if (departamento_id) { 
+                    $.ajax({ 
+                        url: `/obtener_municipios/${departamento_id}/`, // Usa interpolación con backticks 
+                        method: 'GET', 
+                        success: function(data) { 
+                            if (data.status === 'success') { 
+                                var municipios = data.municipios; 
+    
+                                // Limpiar las opciones existentes excepto la primera 
+                                $('#municipio').children('option:not(:first)').remove(); 
+    
+                                // Agregar nuevas opciones al campo de selección 
+                                municipios.forEach(function(municipio) { 
+                                    $('#municipio').append(`<option value="${municipio.id}">${municipio.nombre}</option>`); // El ID como valor, nombre para mostrar 
+                                }); 
+                            } 
+                        }, 
+                        error: function() { 
+                            console.error("Error al cargar los municipios."); 
+                        } 
+                    }); 
+                } 
             });
     
-        </script>        
+            // Función para retroceder en la historia del navegador
+            function goBack() {
+                window.history.back();
+            }
+    
+            // Configuración de la barra superior basada en datos almacenados localmente
+            var convenio = JSON.parse(localStorage.getItem('convenio'));
+            if (convenio) {
+                $('#topbar-container').css('background-color', convenio.color_primario);
+                $('#convenio-nombre').text(convenio.nombre);
+            }
+        });
+    </script>
+    
+    <script>
+        $(document).ready(function() {
+            // Evento para formatear la fecha al cambiar su valor
+            $('#fecha-certificado').change(function() {
+                // Obtener el valor del campo de fecha
+                var fecha = $(this).val();
+                
+                // Dividir la fecha en año, mes y día
+                var parts = fecha.split("-");
+                var year = parts[0];
+                var month = parts[1];
+                var day = parts[2];
+                
+                // Formatear la fecha como "año-mes-día"
+                var fechaFormateada = year + '-' + month + '-' + day;
+                
+                // Asignar el valor formateado al campo de fecha
+                $(this).val(fechaFormateada);
+            });
+    
+        })  
+    </script>
+    
+    
+    
+    
+    
+              
 </body>
 </html>
