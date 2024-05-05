@@ -74,13 +74,34 @@
     </div>
 </div>
 
+<!-- Modal para mostrar el resultado --> 
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true"> 
+    <div class="modal-dialog" role="document"> 
+        <div class="modal-content"> 
+            <div class="modal-header"> 
+                <h5 class="modal-title" id="modalLabel">Solicitud Exitosa</h5> 
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"> 
+                    <span aria-hidden="true">&times;</span> 
+                </button> 
+            </div> 
+            <div class="modal-body"> 
+                Solicitud creada correctamente. Número de radicado: <span id="radicadoNumber"></span> 
+            </div> 
+            <div class="modal-footer"> 
+                <button type="button" id="aceptar-button" class="btn btn-secondary">Aceptar</button> 
+            </div> 
+        </div> 
+    </div> 
+</div>
+  
+
     <div class="container-fluid">
         <div class="row">
             <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
                     <h2 class="mb-0"><b> Solicitud Certificado Persona Natural</b></h2>
                     
                     <div class="mb-3">
-                        <form action="{% url 'radicado_pers_nat' %}" method="POST" enctype="multipart/form-data">
+                        <form id="solicitud-certificado-form" enctype="multipart/form-data">
                             {% csrf_token %}
                         <br>
                             <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
@@ -155,9 +176,9 @@
                             <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                         </div>
                         <br>
-                        <form action="{% url 'radicado_pers_nat' %}" method="POST" enctype="multipart/form-data">
+                        <form  method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Solicitar Certificado</button>
+                            <button id="solicitar-certificado" type="button" class="btn btn-primary">Solicitar Certificado</button>
                         </form>
                         <br>
                     </form>
@@ -267,12 +288,55 @@
             });
     
         })  
-    </script>
-    
-    
-    
-    
-    
-              
+        </script>
+        <script>
+            $(document).ready(function() { 
+                // Evento de envío del formulario 
+                $('#solicitar-certificado').on('click', function() { 
+                    var formData = new FormData($('#solicitud-certificado-form')[0]);  // Para formularios con archivos 
+            
+                    $.ajax({ 
+                        url: '{% url "radicado_pers_nat" %}',  // URL para enviar la solicitud SOAP 
+                        type: 'POST',  // Método HTTP 
+                        data: formData, 
+                        contentType: false, 
+                        processData: false, 
+                        success: function(response) { 
+                            if (response.status === 'success') { 
+                                $('#radicadoNumber').text(response.radicado);  // Mostrar número de radicado 
+                                $('#successModal').modal('show');  // Mostrar el modal 
+                            } else { 
+                                alert(response.message); 
+                            } 
+                        }, 
+                        error: function(error) { 
+                            alert('Hubo un error al enviar la solicitud.'); 
+                        } 
+                    }); 
+                }); 
+        
+                // Obtener el objeto 'convenio' del localStorage 
+                var convenio = JSON.parse(localStorage.getItem('convenio'));  // Extraer y parsear el objeto 
+            
+                if (convenio && convenio.id) { 
+                    // Convertir el ID a número entero por seguridad 
+                    var convenioId = parseInt(convenio.id, 10);  // Convierte a entero para evitar errores de formato 
+            
+                    // Redirigir al hacer clic en el botón 'Aceptar' 
+                    $('#aceptar-button').on('click', function() { 
+                        // Asegúrate de usar la interpolación de cadenas correcta con comillas invertidas 
+                        var redirection_url = `/plantilla_dinamica/${convenioId}/`;  // URL dinámica con convenioId 
+                        window.location.href = redirection_url;  // Redirige a la URL correcta 
+                    }); 
+                } else { 
+                    console.error("No se encontró el objeto 'convenio' o no tiene un ID."); 
+                    alert("Error: No se encontró el convenio_id para redirigir."); 
+                } 
+            });
+        </script>
+        
+        
+
+
 </body>
 </html>

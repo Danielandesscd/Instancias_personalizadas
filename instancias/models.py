@@ -5,19 +5,18 @@ from django.contrib.auth.models import User
 
 
 class DATOS(models.Model):
-    id = models.AutoField(primary_key=True)
+    id_convenio = models.IntegerField
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     tipo_doc = models.CharField(max_length=100)
-    nuemro_doc = models.CharField(max_length=100)
+    numero_doc = models.CharField(max_length=100)
     correo = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100)
     departamento = models.CharField(max_length=100)
     municipio = models.CharField(max_length=100)
-    #tipo_certificado = models.CharField(max_length=100)
-    #formato_entrega = models.CharField(max_length=100)
-    #vigencia = models.CharField(max_length=100)
-    documentos = models.CharField(max_length=100)
+    tipo_certificado = models.CharField(max_length=100)
+    formato_entrega = models.CharField(max_length=100)
+    vigencia = models.CharField(max_length=100)
     ocupacion = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
     unidad_organizacional = models.CharField(max_length=100)
@@ -26,8 +25,9 @@ class DATOS(models.Model):
     facultad = models.CharField(max_length=100)
     titulo_profesional = models.CharField(max_length=100)
     matricula_profesional = models.CharField(max_length=100)
-    pin = models.CharField(max_length=100)
-
+    
+    radicado = models.CharField(max_length=50)
+    
     
     
 class SOLICITUD_CERT(models.Model):
