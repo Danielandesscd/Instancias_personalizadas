@@ -46,8 +46,10 @@ urlpatterns = [
     path('credenciales_webservice/', views.credenciales_webservice, name='credenciales_webservice'),
     path('generar_cabecera_soap/', views.generar_cabecera_soap, name='generar_cabecera_soap'),
     path('radicado_pers_nat/', views.radicado_pers_nat, name='radicado_pers_nat'),
-    
-
+    path('radicado_pers_nat_rut/', views.radicado_pers_nat_rut, name='radicado_pers_nat_rut'),
+    path('obtener_universidades/<int:municipio_id>/', views.obtener_universidades, name='obtener_universidades'),
+    path('radicado_prof_titulado/', views.radicado_prof_titulado, name='radicado_prof_titulado'),
+    path('obtener_titulos/<int:universidad_id>/', views.obtener_titulos, name='obtener_titulos'),
 ]
 
 if settings.DEBUG:
