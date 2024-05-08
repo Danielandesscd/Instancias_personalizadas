@@ -23,6 +23,10 @@ urlpatterns = [
     path('crear_instancia/', views.crear_instancia, name='crear_instancia'),
     #path('guardar_convenios/', views.guardar_convenios, name='guardar_convenios'),
     path('form_pers_nat/', views.form_pers_nat, name='form_pers_nat'),
+    path('form_rep_leg/', views.form_rep_leg, name='form_rep_leg'),
+    path('form_func_pub/', views.form_func_pub, name='form_func_pub'),
+    path('form_siif_nac/', views.form_siif_nac, name='form_siif_nac'),
+    path('form_com_acad/', views.form_com_acad, name='form_com_acad'),
     path('form_pers_jur/', views.form_pers_jur, name='form_pers_jur'),
     path('form_pers_nat_rut/', views.form_pers_nat_rut, name='form_pers_nat_rut'),
     path('form_pert_emp/', views.form_pert_emp, name='form_pert_emp'), 
@@ -50,6 +54,16 @@ urlpatterns = [
     path('obtener_universidades/<int:municipio_id>/', views.obtener_universidades, name='obtener_universidades'),
     path('radicado_prof_titulado/', views.radicado_prof_titulado, name='radicado_prof_titulado'),
     path('obtener_titulos/<int:universidad_id>/', views.obtener_titulos, name='obtener_titulos'),
+    path('radicado_pert_empresa/', views.radicado_pert_empresa, name='radicado_pert_empresa'),
+    path('radicado_fe_juridica/', views.radicado_fe_juridica, name='radicado_fe_juridica'),
+    path('radicado_fe_natural/', views.radicado_fe_natural, name='radicado_fe_natural'),
+    path('radicado_fun_publica/', views.radicado_fun_publica, name='radicado_fun_publica'),
+    path('radicado_perso_juridica/', views.radicado_perso_juridica, name='radicado_perso_juridica'),
+    path('radicado_com_academica/', views.radicado_com_academica, name='radicado_com_academica'),
+    path('radicado_com_siif/', views.radicado_com_siif, name='radicado_com_siif'),
+    path('radicado_repre_legal/', views.radicado_repre_legal, name='radicado_repre_legal'),
+
+
 ]
 
 if settings.DEBUG:

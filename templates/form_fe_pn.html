@@ -91,7 +91,7 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
+             <div class="col-10 col-sm-8 col-md-8 col-lg-8 mx-auto">
                     <h2 class="mb-0"><b> Solicitud Certificado Fact. Electrónica Persona Natural</b></h2>
                     <div class="mb-3">
                         <form id="solicitud-certificado-form" enctype="multipart/form-data">
@@ -117,14 +117,14 @@
                             <input type="text" class="form-control" id="apellidos" name="apellidos">
                         </div>
                         <div class="mb-3">
-                            <label for="departamento" class="form-label"><b>Departamento</b></label>
-                                <select id="departamento" name="departamento">
+                            <label for="departamento-persona" class="form-label"><b>Departamento</b></label>
+                                <select id="departamento-persona" name="departamento-persona">
                                     <option value="">Seleccione un departamento</option> 
                                 </select>
                           </div>
                           <div class="mb-3"> 
-                            <label for="municipio" class="form-label"><b>Municipio</b></label> 
-                            <select id="municipio" name="municipio"> 
+                            <label for="municipio-persona" class="form-label"><b>Municipio</b></label> 
+                            <select id="municipio-persona" name="municipio-persona"> 
                                 <option value="">Seleccione un municipio</option> 
                             </select> 
                         </div>
@@ -133,8 +133,8 @@
                             <input type="text" class="form-control" id="direccion" name="direccion">
                         </div>
                         <div class="mb-3">
-                            <label for="numero-celular" class="form-label"><b>Número de Celular</b></label>
-                            <input type="text" class="form-control" id="numero-celular" name="numero-celular">
+                            <label for="celular" class="form-label"><b>Número de Celular</b></label>
+                            <input type="text" class="form-control" id="celular" name="celular">
                         </div>
                         <div class="mb-3">
                             <label for="correo" class="form-label"><b>Correo Electrónico</b></label>
@@ -147,29 +147,37 @@
                             <label for="razon-social" class="form-label"><b>Razón Social</b></label>
                             <input type="text" class="form-control" id="razon-social" name="razon-social">
                         </div>
+                        <label for="tipo-documento-entidad" class="form-label"><b>Tipo de Documento entidad</b></label>
+                        <select class="form-select" id="tipo-documento-entidad" name="tipo-documento-entidad">
+                            <option value="1">CC</option>
+                            <option value="">CE</option>
+                            <option value="">NIT</option>
+                            <option value="">Pasaporte</option>
+                        </select>
+                        
                         <div class="mb-3">
-                            <label for="documento-entidad" class="form-label"><b>Documento de la Entidad</b></label>
-                            <input type="text" class="form-control" id="documento-entidad" name="documento-entidad">
+                            <label for="numero-documento-entidad" class="form-label"><b>Documento de la Entidad</b></label>
+                            <input type="text" class="form-control" id="numero-documento-entidad" name="numero-documento-entidad">
                         </div>
                         <div class="mb-3">
                             <label for="correo-entidad" class="form-label"><b>Correo Electrónico de la Entidad</b></label>
                             <input type="email" class="form-control" id="correo-entidad" name="correo-entidad">
                         </div>
                         <div class="mb-3">
-                            <label for="departamento" class="form-label"><b>Departamento</b></label>
-                                <select id="departamento" name="departamento">
+                            <label for="departamento-empresa" class="form-label"><b>Departamento</b></label>
+                                <select id="departamento-empresa" name="departamento-empresa">
                                     <option value="">Seleccione un departamento</option> 
                                 </select>
                           </div>
                           <div class="mb-3"> 
-                            <label for="municipio" class="form-label"><b>Municipio</b></label> 
-                            <select id="municipio" name="municipio"> 
+                            <label for="municipio-empresa" class="form-label"><b>Municipio</b></label> 
+                            <select id="municipio-empresa" name="municipio-empresa"> 
                                 <option value="">Seleccione un municipio</option> 
                             </select> 
                         </div>
                         <div class="mb-3">
-                            <label for="direccion" class="form-label"><b>Dirección De La Entidad</b></label>
-                            <input type="text" class="form-control" id="direccion" name="direccion">
+                            <label for="direccion-entidad" class="form-label"><b>Dirección De La Entidad</b></label>
+                            <input type="text" class="form-control" id="direccion-entidad" name="direccion-entidad">
                         </div>
                         <div class="mb-3">
                             <label for="fecha-certificado" class="form-label"><b>Fecha de Certificado</b></label>
@@ -196,13 +204,16 @@
                             <input type="text" class="form-control" id="unidad-organizacional" name="unidad-organizacional">
                         </div>
                         <div class="mb-3">
+                            <label for="organizacion-factel" class="form-label"><b>Organizacion Factel</b></label>
+                            <input type="text" class="form-control" id="organizacion-factel" name="organizacion-factel">
+                        </div>
+                        <div class="mb-3">
                             <label for="formato-entrega" class="form-label"><b>Formato de Entrega</b></label>
                             <select class="form-select" id="formato-entrega" name="formato-entrega">
-                                <option value="3">PKCS10</option>
-                                <option value="4">Token virtual</option>
-                                <option value="2">Token Fisico</option>
+                                <option value="2">PKCS10</option>
+                                
                             </select>
-                        </div>
+                        </div> 
                         <br>
                         <div class="mb-3">
                             <label for="documentos" class="form-label"><b>Documentos De Soporte</b></label>
@@ -230,63 +241,75 @@
     
     <script>
         $(document).ready(function() { 
-            // Evento para cargar departamentos al hacer clic en el campo de selección
-            $('#departamento').on('click', function() { 
-                // Comprobar si el campo ya tiene opciones para evitar recargar 
-                if ($(this).children('option').length > 1) { 
-                    return; // Ya está cargado 
-                } 
+            // Cargar departamentos y municipios para datos personales
+            cargarDatos('#departamento-persona', '#municipio-persona');
     
-                // Solicitud AJAX para obtener departamentos 
-                $.ajax({ 
-                    url: '/obtener_departamentos/', // Verifica que esta URL sea correcta 
-                    method: 'GET', 
-                    success: function(data) { 
-                        if (data.status === 'success') { 
-                            var departamentos = data.departamentos; 
+            // Cargar departamentos y municipios para datos de la empresa
+            cargarDatos('#departamento-empresa', '#municipio-empresa');
     
-                            // Limpiar las opciones existentes excepto la primera 
-                            $('#departamento').children('option:not(:first)').remove(); 
-    
-                            // Agregar nuevas opciones al campo de selección 
-                            departamentos.forEach(function(departamento) { 
-                                $('#departamento').append(`<option value="${departamento.id_departamento}">${departamento.nombre}</option>`); 
-                            }); 
-                        } 
-                    }, 
-                    error: function() { 
-                        console.error("Error al cargar los departamentos."); 
-                    } 
+            // Función para cargar departamentos y municipios
+            function cargarDatos(departamentoSelector, municipioSelector) {
+                // Evento para cargar departamentos
+                $(departamentoSelector).on('click', function() { 
+                    cargarDepartamentos(departamentoSelector);
                 }); 
-            }); 
     
-            // Evento para cargar municipios al seleccionar un departamento 
-            $('#departamento').on('change', function() { 
-                var departamento_id = $(this).val(); // Obtener el ID del departamento seleccionado 
+                // Evento para cargar municipios cuando cambia el departamento 
+                $(departamentoSelector).on('change', function() { 
+                    cargarMunicipios(departamentoSelector, municipioSelector);
+                }); 
+            }
     
-                if (departamento_id) { 
-                    $.ajax({ 
-                        url: `/obtener_municipios/${departamento_id}/`, // Usa interpolación con backticks 
-                        method: 'GET', 
-                        success: function(data) { 
-                            if (data.status === 'success') { 
-                                var municipios = data.municipios; 
+            // Función para cargar departamentos
+            function cargarDepartamentos(departamentoSelector) {
+                if ($(departamentoSelector).children('option').length > 1) {  
+                    return;  
+                }  
     
-                                // Limpiar las opciones existentes excepto la primera 
-                                $('#municipio').children('option:not(:first)').remove(); 
+                $.ajax({  
+                    url: '/obtener_departamentos/',  
+                    method: 'GET',  
+                    success: function(data) {  
+                        if (data.status === 'success') {  
+                            var departamentos = data.departamentos;  
     
-                                // Agregar nuevas opciones al campo de selección 
-                                municipios.forEach(function(municipio) { 
-                                    $('#municipio').append(`<option value="${municipio.id}">${municipio.nombre}</option>`); // El ID como valor, nombre para mostrar 
-                                }); 
-                            } 
-                        }, 
-                        error: function() { 
-                            console.error("Error al cargar los municipios."); 
-                        } 
-                    }); 
-                } 
-            });
+                            $(departamentoSelector).children('option:not(:first)').remove();  
+    
+                            departamentos.forEach(function(departamento) {  
+                                $(departamentoSelector).append(`<option value="${departamento.id_departamento}">${departamento.nombre}</option>`);  
+                            });  
+                        }  
+                    },  
+                    error: function() {  
+                        console.error("Error al cargar los departamentos.");  
+                    }  
+                });  
+            }
+    
+            // Función para cargar municipios
+            function cargarMunicipios(departamentoSelector, municipioSelector) {
+                var departamento_id = $(departamentoSelector).val();  
+                if (departamento_id) {  
+                    $.ajax({  
+                        url: `/obtener_municipios/${departamento_id}/`,  
+                        method: 'GET',  
+                        success: function(data) {  
+                            if (data.status === 'success') {  
+                                var municipios = data.municipios;  
+    
+                                $(municipioSelector).children('option:not(:first)').remove();  
+    
+                                municipios.forEach(function(municipio) {  
+                                    $(municipioSelector).append(`<option value="${municipio.id}">${municipio.nombre}</option>`);  
+                                });  
+                            }  
+                        },  
+                        error: function() {  
+                            console.error("Error al cargar los municipios.");  
+                        }  
+                    });  
+                }  
+            }
     
             // Función para retroceder en la historia del navegador
             function goBack() {
@@ -301,6 +324,7 @@
             }
         });
     </script>
+    
     
     <script>
         $(document).ready(function() {
@@ -329,9 +353,13 @@
                 // Evento de envío del formulario 
                 $('#solicitar-certificado').on('click', function() { 
                     var formData = new FormData($('#solicitud-certificado-form')[0]);  // Para formularios con archivos 
-            
+                    var municipio = $('#municipio-persona').val();  // Obtener el valor del municipio 
+                    var municipioEmpresa = $('#municipio-empresa').val();
+
+                    console.log("Municipio personal:", $('#municipio-persona').val());  // Comprobar el valor del municipio personal 
+                    console.log("Municipio empresa:", $('#municipio-empresa').val());
                     $.ajax({ 
-                        url: '{% url "radicado_pers_nat" %}',  // URL para enviar la solicitud SOAP 
+                        url: '{% url "radicado_fe_natural" %}',  // URL para enviar la solicitud SOAP 
                         type: 'POST',  // Método HTTP 
                         data: formData, 
                         contentType: false, 

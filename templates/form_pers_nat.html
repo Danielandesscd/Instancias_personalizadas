@@ -171,7 +171,7 @@
                                 <option value="2">Token Fisico</option>
                             </select> 
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3"> 
                             <label for="documentos" class="form-label"><b>Documentos De Soporte</b></label>
                             <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                         </div>
@@ -233,7 +233,7 @@
                     $.ajax({ 
                         url: `/obtener_municipios/${departamento_id}/`, // Usa interpolación con backticks 
                         method: 'GET', 
-                        success: function(data) { 
+                        success: function(data) {  
                             if (data.status === 'success') { 
                                 var municipios = data.municipios; 
     
