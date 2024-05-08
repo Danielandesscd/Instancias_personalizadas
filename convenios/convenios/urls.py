@@ -14,7 +14,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
     path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
-    path('obtener_municipios/<int:id_departamento>/', views.obtener_municipios, name='obtener_municipios'),
+    path('obtener_municipios/<int:departamento_id>/', views.obtener_municipios, name='obtener_municipios'),
     path('instancias', views.instancia, name='instancia'),
     path('home', views.home, name='home'),
     path('campos_form', views.campos_form, name='campos_form'),
@@ -22,7 +22,6 @@ urlpatterns = [
     path('cerrar-sesion/', auth_views.LogoutView.as_view(next_page='inicio'), name='cerrar_sesion'),
     path('crear_instancia/', views.crear_instancia, name='crear_instancia'),
     #path('guardar_convenios/', views.guardar_convenios, name='guardar_convenios'),
-    path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
     path('form_pers_nat/', views.form_pers_nat, name='form_pers_nat'),
     path('form_pers_jur/', views.form_pers_jur, name='form_pers_jur'),
     path('form_pers_nat_rut/', views.form_pers_nat_rut, name='form_pers_nat_rut'),
@@ -45,7 +44,11 @@ urlpatterns = [
     path('verificar_convenio/<int:convenio_id>/', views.verificar_convenio, name='verificar_convenio'),
     path('login_instancia/', views.login_instancia, name='login_instancia'),
     path('credenciales_webservice/', views.credenciales_webservice, name='credenciales_webservice'),
-    path('crear_cabecera_soap/', views.crear_cabecera_soap, name='crear_cabecera_soap'),
+    path('generar_cabecera_soap/', views.generar_cabecera_soap, name='generar_cabecera_soap'),
+    path('radicado_pers_nat/', views.radicado_pers_nat, name='radicado_pers_nat'),
+    path('radicado_pers_nat_rut/', views.radicado_pers_nat_rut, name='radicado_pers_nat_rut'),
+    path('obtener_universidades/<int:municipio_id>/',  views.obtener_universidades, name='obtener_universidades'),
+    path('radicado_prof_titulado/', views.radicado_prof_titulado, name='radicado_prof_titulado'),
 
 
 ]

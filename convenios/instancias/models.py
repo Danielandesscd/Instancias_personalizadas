@@ -1,3 +1,4 @@
+
 from django.db import models
 from django.utils import timezone
 from django.contrib.postgres.fields import ArrayField
@@ -26,7 +27,7 @@ class DATOS(models.Model):
     facultad = models.CharField(max_length=100)
     titulo_profesional = models.CharField(max_length=100)
     matricula_profesional = models.CharField(max_length=100)
-    pin = models.CharField(max_length=100)
+    numero_radicado= models.CharField(max_length=100)
 
     
     
@@ -116,7 +117,6 @@ class FORMATO_ENTREGA(models.Model):
  
     
 class VIGENCIA(models.Model):
+
     id = models.AutoField(primary_key=True)
     id_cert = models.IntegerField()
-
-

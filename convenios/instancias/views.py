@@ -36,6 +36,8 @@ from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.http import HttpResponseRedirect
 
 
 def inicio(request):
@@ -241,8 +243,9 @@ def campos_form(request):
 def instancia(request):
     return render (request, 'instancia.html')
 
+
 def form_pers_nat(request):
-    return render (request, 'form_pers_nat.html')
+    return render(request, 'form_pers_nat.html')
 
 def form_pers_jur(request):
     return render (request, 'form_pers_jur.html')
@@ -425,11 +428,11 @@ def guardar_certificado(request):
             vigencias = data.get("vigencias", [])  # Convertir a lista de enteros
             formatos = data.get("formatos", [])  # Convertir a lista de cadenas
 
-            # Validar existencia de id_convenio
+            # Validar existencia de `id_convenio`
             if not id_convenio:
                 return JsonResponse({"error": "Falta id_convenio"}, status=400)
 
-            # Verificar que vigencias y formatos no estén vacíos
+            # Verificar que `vigencias` y `formatos` no estén vacíos
             if not formatos:
                 return JsonResponse({"error": "Falta 'formatos'."}, status=400)
             if not vigencias:
@@ -468,7 +471,6 @@ def formulario_instancia(request):
 def formulario1(request):
     departamentos = obtener_departamentos()  # Llamar a la función para obtener la lista de departamentos
     return render(request, 'formulario1.html', {'departamentos': departamentos})
-
 def procesar_formulario(request):
     if request.method == 'POST':
         # Aquí puedes procesar los datos del formulario enviado
@@ -496,148 +498,581 @@ def obtener_conexion_db():
     )
 
 
-@login_required
+
+
+
+def generar_cabecera_soap(request):
+    convenios = request.user.CONVENIO.all()
+    if convenios.exists():
+        convenio = convenios.first()
+        usuario_webservice = convenio.usuario_weservice
+        contrasena_webservice = convenio.contraseña_webservice
+
+        # Generar la cabecera SOAP
+        tm_created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        simple_nonce = random.randint(0, 1000000)
+        encoded_nonce = base64.b64encode(str(simple_nonce).encode()).decode()
+        passdigest = base64.b64encode(
+            hashlib.sha1(f"{simple_nonce}{tm_created}{contrasena_webservice}".encode()).digest()
+        ).decode()
+
+        cabecera = f"""
+        <soapenv:Header>
+            <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+                <wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713">
+                    <wsse:Username>{usuario_webservice}</wsse:Username>
+                    <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">{passdigest}</wsse:Password>
+                    <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">{encoded_nonce}</wsse:Nonce>
+                    <wsu:Created>{tm_created}</wsu:Created>
+                </wsse:UsernameToken>
+            </wsse:Security>
+        </soapenv:Header>
+        """
+        
+        return {
+            'status': 'success',
+            'cabecera': cabecera
+        }
+    
+    return {
+        'status': 'error',
+        'message': 'No se encontró ningún convenio para este usuario'
+    }
+
+
 def credenciales_webservice(request):
-    if request.method == "POST":
-        user = request.user
-        
-        try:
-            convenios = user.CONVENIO.all()
-            
-            if convenios.exists():
-                convenio = convenios.first()  # Obtener el primer convenio
-                usuario_webservice = convenio.usuario_weservice
-                contrasena_webservice = convenio.contraseña_webservice
+    resultado = generar_cabecera_soap(request)
 
-                print("Usuario Webservice antes de llamar a crear_cabecera_soap:", usuario_webservice)
-                print("Contraseña Webservice antes de llamar a crear_cabecera_soap:", contrasena_webservice)
-                cabecera_soap = crear_cabecera_soap("TestUser", "TestPassword")
-                print("Cabecera SOAP:", cabecera_soap)
-
-                return JsonResponse({'status': 'success'})
-
-            else:
-                return JsonResponse({'status': 'error', 'message': 'No se encontró ningún convenio para este usuario'})
-
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    
-    return redirect('home')
+    if resultado['status'] == 'success':
+        request.session['soap_header'] = resultado['cabecera']
+        return JsonResponse(resultado)  
+    else:
+        return JsonResponse(resultado)
 
 
-def crear_cabecera_soap(username, password):
-    # Generar 'created'
-    tm_created = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    # Generar 'nonce'
-    simple_nonce = random.randint(0, 1000000)
-    encoded_nonce = base64.b64encode(str(simple_nonce).encode()).decode()
+def obtener_departamentos(request): 
+    # Obtener datos para la respuesta SOAP 
+    response = credenciales_webservice(request) 
+    print("credenciales",response)
+    if isinstance(response, JsonResponse): 
+        response_content = json.loads(response.content) 
+ 
+        if response_content['status'] == 'success': 
+            cabecera = response_content['cabecera'] 
+             
+            cuerpo_soap = f""" 
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"> 
+                <soapenv:Header> 
+                    {cabecera} 
+                </soapenv:Header> 
+                <soapenv:Body> 
+                    <and:DepartamentoRequest xmlns:and="http://www.andesscd.com.co/"> 
+                        <and:cadena/> 
+                    </and:DepartamentoRequest> 
+                </soapenv:Body> 
+            </soapenv:Envelope> 
+            """ 
+ 
+            soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php" 
+            headers = { 
+                "Content-Type": "text/xml; charset=utf-8", 
+            } 
+ 
+            # Hacer la solicitud SOAP para obtener departamentos 
+            response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers) 
+ 
+            # Extraer la información de la respuesta SOAP 
+            root = ET.fromstring(response_soap.text) 
+            departamento_response = root.find(".//ns1:DepartamentoResponse", namespaces={ 
+                'ns1': 'http://www.andesscd.com.co/' 
+            }) 
+ 
+             
+            departamentos = [] 
+ 
+            if departamento_response is not None: 
+                for item in departamento_response.findall(".//ns1:mensaje", namespaces={ 
+                    'ns1': 'http://www.andesscd.com.co/' 
+                }): 
+                    mensajes = json.loads(item.text) 
+                    print("departamentos:", departamentos)
+ 
+                    # Agregar tanto ID como nombre a la lista 
+                    departamentos.extend([{'id_departamento': d['id_departamento'], 'nombre': d['nombre']} for d in mensajes]) 
+                    print("departamentos1:", departamentos)
+            return JsonResponse({ 
+                'status': 'success', 
+                'departamentos': departamentos 
+            }) 
+ 
+    #
+    return JsonResponse({ 
+        'status': 'error', 
+        'message': 'Error al obtener los departamentos' 
+    })
 
-    # Calcular 'password digest'
-    passdigest = base64.b64encode(
-        hashlib.sha1(f"{simple_nonce}{tm_created}{password}".encode()).digest()
-    ).decode()
+def obtener_municipios(request, departamento_id): 
+    # Obtener credenciales SOAP  
+    response = credenciales_webservice(request) 
+    response_content = json.loads(response.content) 
+     
+    if response_content['status'] == 'success': 
+        cabecera = response_content['cabecera'] 
+        cuerpo_soap = f""" 
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"> 
+            <soapenv:Header> 
+                {cabecera} 
+            </soapenv:Header> 
+            <soapenv:Body> 
+                <and:MunicipioRequest xmlns:and="http://www.andesscd.com.co/"> 
+                    <and:id_departamento>{departamento_id}</and:id_departamento> 
+                </and:MunicipioRequest> 
+            </soapenv:Body> 
+        </soapenv:Envelope> 
+        """ 
+         
+        # Hacer la solicitud SOAP para obtener municipios 
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php" 
+        headers = { 
+            "Content-Type": "text/xml; charset=utf-8", 
+        } 
+         
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers) 
+ 
+        # Extraer municipios de la respuesta SOAP 
+        root = ET.fromstring(response_soap.text) 
+        municipio_response = root.find(".//ns1:MunicipioResponse", namespaces={ 
+            'ns1': 'http://www.andesscd.com.co/' 
+        }) 
+ 
+        municipios = [] 
+        if municipio_response is not None: 
+            for item in municipio_response.findall(".//ns1:mensaje", namespaces={ 
+                'ns1': 'http://www.andesscd.com.co/' 
+            }): 
+                mensajes = json.loads(item.text) 
+ 
+                # Asegurarse de usar las claves correctas para ID y nombre 
+                municipios.extend([{'id': d['id_municipio'], 'nombre': d['nombre']} for d in mensajes]) 
+                
+         
+        return JsonResponse({ 
+            'status': 'success', 
+            'municipios': municipios  # Ahora la lista tiene ID y nombre 
+        }) 
+     
+    return JsonResponse({ 
+        'status': 'error', 
+        'message': 'No se pudo obtener los municipios' 
+    })
 
-    # Crear la cabecera SOAP
-    cabecera = f"""
-    <soapenv:Header>
-        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
-            <wsse:UsernameToken wsu:Id="UsernameToken-7967B371AB1C77594517104219622713">
-                <wsse:Username>{username}</wsse:Username>
-                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">{passdigest}</wsse:Password>
-                <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">{encoded_nonce}</wsse:Nonce>
-                <wsu:Created>{tm_created}</wsu:Created>
-            </wsse:UsernameToken>
-        </wsse:Security>
-    </soapenv:Header>
-    """
-    
-    return cabecera
+def obtener_universidades(request, municipio_id): 
+    # Obtener datos para la respuesta SOAP 
+    response = credenciales_webservice(request) 
+    response_content = json.loads(response.content)
 
-def obtener_departamentos():
-    url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
-    # Crea la cabecera SOAP
-    cabecera = crear_cabecera_soap()
+    if response_content['status'] == 'success': 
+        cabecera = response_content['cabecera'] 
+        cuerpo_soap = f""" 
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"> 
+            <soapenv:Header> 
+                {cabecera} 
+            </soapenv:Header> 
+            <soapenv:Body> 
+                <and:ListarUniversidadesRequest xmlns:and="http://www.andesscd.com.co/"> 
+                    <and:id_municipio>{municipio_id}</and:id_municipio> 
+                </and:ListarUniversidadesRequest> 
+            </soapenv:Body> 
+        </soapenv:Envelope> 
+        """ 
 
-    body = """
-    <soapenv:Body>
-        <and:DepartamentoRequest>
-            <and:cadena/>
-        </and:DepartamentoRequest>
-    </soapenv:Body>
-    """
-    payload = f"""
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
-        {cabecera}
-        {body}
-    </soapenv:Envelope>
-    """
-    headers = {
-      'Content-Type': 'text/xml'
-    }
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php" 
+        headers = { 
+            "Content-Type": "text/xml; charset=utf-8", 
+        } 
+ 
+        # Realizar la solicitud SOAP para obtener universidades
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers) 
 
-    try:
-        # Realiza la solicitud SOAP
-        response = requests.post(url, headers=headers, data=payload)
-        response.raise_for_status() 
-        
+        # Extraer datos de la respuesta SOAP 
+        root = ET.fromstring(response_soap.text) 
+        mensaje = root.find(".//ns1:mensaje", namespaces={ 
+            'ns1': 'http://www.andesscd.com.co/' 
+        }) 
+ 
+        universidades = [] 
+        if mensaje is not None:
+            universidades_data = json.loads(mensaje.text)
+            for universidad in universidades_data:
+                universidades.append({
+                    'id_icfes_u': universidad['id_icfes_u'],
+                    'nombre': universidad['nombre']
+                })
+
+        return JsonResponse({ 
+            'status': 'success', 
+            'universidades': universidades 
+        }) 
+
+    return JsonResponse({ 
+        'status': 'error', 
+        'message': 'No se pudo obtener las universidades' 
+    })
+
+def radicado_pers_nat(request):  
+    response = credenciales_webservice(request)  
       
-        root = ET.fromstring(response.content)
-        mensaje = root.find(".//{http://www.andesscd.com.co/}mensaje").text
-        departamentos = json.loads(mensaje)
-        
-        return departamentos
-    
-    except requests.exceptions.RequestException as e:
-        return {'error': str(e)}
-    
+    if isinstance(response, JsonResponse):  
+        response_content = json.loads(response.content)  
+  
+        if response_content['status'] == 'success':  
+            cabecera = response_content['cabecera']  
+    try:  
+         
+  
+        # Validar datos del formulario  
+        tipo_doc = request.POST.get('tipo-documento', '')  
+        documento = request.POST.get('numero-documento', '')  
+        nombres = request.POST.get('nombres', '')  
+        apellidos = request.POST.get('apellidos', '')  
+        municipio = request.POST.get('municipio', '')  
+        direccion = request.POST.get('direccion', '')  
+        email = request.POST.get('correo', '')  
+        telefono = request.POST.get('numero-celular', '')  
+        fecha_cert = request.POST.get('fecha-certificado', '')  
+        vigencia = request.POST.get('vigencia', '')  
+        formato = request.POST.get('formato-entrega', '')  
+  
+        # Verificar campos obligatorios  
+        if not (tipo_doc and documento and nombres and apellidos and municipio and direccion and email):  
+            return JsonResponse({  
+                'status': 'error',  
+                'message': 'Faltan datos obligatorios'  
+            })  
+  
+        #Codificar soporte en base64 si corresponde  
+        soporte = request.FILES.get('documentos', None)  # El nombre del campo que contiene el archivo  
+  
+        if not soporte:  
+            return JsonResponse({  
+                'status': 'error',  
+                'message': 'El archivo .zip no se encontró'  
+            }) 
+        # Leer el contenido del archivo .zip  
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo  
+         
+        # Convertir a base64  
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8') 
+  
+        # Construir el cuerpo SOAP  
+        cuerpo_soap = f"""  
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">  
+            <soapenv:Header>  
+                {cabecera}    
+            </soapenv:Header>  
+           <soapenv:Body>  
+              <and:CertificadosRequest>  
+                 <and:tipoCert>16</and:tipoCert>  
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
+                 <and:documento>{documento}</and:documento>  
+                 <and:nombres>{nombres}</and:nombres>  
+                 <and:apellidos>{apellidos}</and:apellidos>  
+                 <and:municipio>{municipio}</and:municipio>  
+                 <and:direccion>{direccion}</and:direccion>  
+                 <and:email>{email}</and:email>  
+                 <and:telefono>{telefono}</and:telefono>  
+                 <and:celular>{telefono}</and:celular> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert>  
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>  
+                 <and:formato>{formato}</and:formato>  
+                 <and:soporte>{soporte_base64}</and:soporte> 
+                 
+                  
+              </and:CertificadosRequest>  
+           </soapenv:Body>  
+        </soapenv:Envelope>  
+        """  
+        #print("cuerpo", cuerpo_soap) 
+ 
+        # Enviar la solicitud SOAP  
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
+        headers = {  
+            "Content-Type": "text/xml; charset=utf-8",  
+            "Accept-Encoding": "identity"  
+        }   
+  
+        # Realizar la solicitud POST  
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)  
+        if response_soap.status_code == 200: 
+            # Analizar el XML para obtener el estado y el mensaje 
+            root = ET.fromstring(response_soap.text) 
+ 
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
+ 
+            if int(estado) == 0: 
+                return JsonResponse({ 
+                    'status': 'success', 
+                    'message': 'Solicitud enviada correctamente', 
+                    'radicado': mensaje 
+                }) 
+ 
+            else: 
+                return JsonResponse({ 
+                    'status': 'error', 
+                    'message': 'Error en la solicitud SOAP' 
+                }) 
+ 
+        else: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
+            }) 
+     
+    except Exception as e: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': str(e) 
+        })
 
 
-def obtener_municipios(id_departamento):
-    url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+def radicado_pers_nat_rut(request):  
+    response = credenciales_webservice(request)  
+      
+    if isinstance(response, JsonResponse):  
+        response_content = json.loads(response.content)  
+  
+        if response_content['status'] == 'success':  
+            cabecera = response_content['cabecera']  
+    try:  
+         
+  
+        # Validar datos del formulario  
+        tipo_doc = request.POST.get('tipo-documento', '')  
+        documento = request.POST.get('numero-documento', '')  
+        nombres = request.POST.get('nombres', '')  
+        apellidos = request.POST.get('apellidos', '')  
+        municipio = request.POST.get('municipio', '')  
+        direccion = request.POST.get('direccion', '')  
+        email = request.POST.get('correo', '')  
+        telefono = request.POST.get('numero-celular', '')  
+        fecha_cert = request.POST.get('fecha-certificado', '')  
+        vigencia = request.POST.get('vigencia', '')  
+        formato = request.POST.get('formato-entrega', '')  
+  
+        # Verificar campos obligatorios  
+        if not (tipo_doc and documento and nombres and apellidos and municipio and direccion and email):  
+            return JsonResponse({  
+                'status': 'error',  
+                'message': 'Faltan datos obligatorios'  
+            })  
+  
+        #Codificar soporte en base64 si corresponde  
+        soporte = request.FILES.get('documentos', None)  # El nombre del campo que contiene el archivo  
+  
+        if not soporte:  
+            return JsonResponse({  
+                'status': 'error',  
+                'message': 'El archivo .zip no se encontró'  
+            }) 
+        # Leer el contenido del archivo .zip  
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo  
+         
+        # Convertir a base64  
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8') 
+  
+        # Construir el cuerpo SOAP  
+        cuerpo_soap = f"""  
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">  
+            <soapenv:Header>  
+                {cabecera}    
+            </soapenv:Header>  
+           <soapenv:Body>  
+              <and:CertificadosPersonaNaturalRUTRequest> 
+                 <and:tipoCert>15</and:tipoCert>  
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
+                 <and:documento>{documento}</and:documento>  
+                 <and:nombres>{nombres}</and:nombres>  
+                 <and:apellidos>{apellidos}</and:apellidos>  
+                 <and:municipio>{municipio}</and:municipio>  
+                 <and:direccion>{direccion}</and:direccion>  
+                 <and:email>{email}</and:email>  
+                 <and:telefono>{telefono}</and:telefono>  
+                 <and:celular>{telefono}</and:celular> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert>  
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>  
+                 <and:formato>{formato}</and:formato>  
+                 <and:soporte>{soporte_base64}</and:soporte> 
+                 
+                  
+              </and:CertificadosPersonaNaturalRUTRequest>  
+           </soapenv:Body>  
+        </soapenv:Envelope>  
+        """  
+        #print("cuerpo", cuerpo_soap) 
+ 
+        # Enviar la solicitud SOAP  
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
+        headers = {  
+            "Content-Type": "text/xml; charset=utf-8",  
+            "Accept-Encoding": "identity"  
+        }   
+  
+        # Realizar la solicitud POST  
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)  
+        if response_soap.status_code == 200: 
+            # Analizar el XML para obtener el estado y el mensaje 
+            root = ET.fromstring(response_soap.text) 
+ 
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
+ 
+            if int(estado) == 0: 
+                return JsonResponse({ 
+                    'status': 'success', 
+                    'message': 'Solicitud enviada correctamente', 
+                    'radicado': mensaje 
+                }) 
+ 
+            else: 
+                return JsonResponse({ 
+                    'status': 'error', 
+                    'message': 'Error en la solicitud SOAP' 
+                }) 
+ 
+        else: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
+            }) 
+     
+    except Exception as e: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': str(e) 
+        })
 
-    payload = """
-    <soapenv:Envelope xmlns:and="http://www.andesscd.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-       <soapenv:Header/>
-       <soapenv:Body>
-          <and:MunicipioRequest>
-             <and:id_departamento>%s</and:id_departamento>
-          </and:MunicipioRequest>
-       </soapenv:Body>
-    </soapenv:Envelope>
-    """ % id_departamento
-
-    headers = {
-      'Content-Type': 'text/xml',
-      'Authorization': 'Basic UEFBTjpnTjlGMnVla3Ru'
-    }
-
+def radicado_prof_titulado(request):
     try:
-        response = requests.post(url, headers=headers, data=payload)
-        response.raise_for_status()  # Lanza una excepción si la solicitud falla (por ejemplo, código de estado HTTP diferente de 200)
-        
-        root = ET.fromstring(response.content)
-        municipios = []
-        print("municipios:",root)
-        print("print:",response)
+        # Obtener cabecera de credenciales
+        response = credenciales_webservice(request)
+        if not isinstance(response, JsonResponse):
+            return JsonResponse({'status': 'error', 'message': 'Error al obtener credenciales'})
 
-        for municipio in root.findall('.//and:Municipio', namespaces={'and': 'http://www.andesscd.com.co/'}):
-            id_municipio = municipio.find('.//and:id_municipio', namespaces={'and': 'http://www.andesscd.com.co/'}).text
-            nombre = municipio.find('.//and:nombre', namespaces={'and': 'http://www.andesscd.com.co/'}).text
-            municipios.append({'id': id_municipio, 'nombre': nombre})
-        
-        return municipios
-    
-    except requests.exceptions.RequestException as e:
-        
-        return [{'error': str(e)}]
+        response_content = json.loads(response.content)
+        if response_content['status'] != 'success':
+            return JsonResponse({'status': 'error', 'message': 'Credenciales no válidas'})
 
-def obtener_municipios_ajax(request):
-    if request.method == 'GET' and 'id_departamento' in request.GET:
-        id_departamento = request.GET['id_departamento']
-        municipios = obtener_municipios(id_departamento)
-        return JsonResponse({'municipios': municipios})
-    return JsonResponse({'error': 'Método de solicitud no permitido o falta el parámetro id_departamento'}, status=400)
+        cabecera = response_content['cabecera']
+
+        # Validar datos del formulario
+        tipo_doc = request.POST.get('tipo-documento', '')
+        documento = request.POST.get('numero-documento', '')
+        nombres = request.POST.get('nombres', '')
+        apellidos = request.POST.get('apellidos', '')
+        municipio = request.POST.get('municipio', '')
+        direccion = request.POST.get('direccion', '')
+        email = request.POST.get('correo', '')
+        telefono = request.POST.get('numero-celular', '')
+        fecha_cert = request.POST.get('fecha-certificado', '')
+        vigencia = request.POST.get('vigencia', '')
+        formato = request.POST.get('formato-entrega', '')
+
+        # Nuevos campos adicionales
+        ocupacion = request.POST.get('ocupacion', '')
+        universidad = request.POST.get('universidad', '')
+        tituloprofesional = request.POST.get('titulo-profesional', '')
+        matriculaprofesional = request.POST.get('matricula-profesional', '')
+        emisortarjetaprofesional = request.POST.get('emisor-tarjeta-profesional', '')
+        facultad = request.POST.get('facultad', '')
+
+        # Verificar campos obligatorios
+        if not (tipo_doc and documento and nombres and apellidos and municipio and direccion and email):
+            return JsonResponse({'status': 'error', 'message': 'Faltan datos obligatorios'})
+
+        # Codificar soporte en base64 si corresponde
+        soporte = request.FILES.get('documentos', None)
+
+        if not soporte:
+            return JsonResponse({'status': 'error', 'message': 'El archivo .zip no se encontró'})
+
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
+
+        # Construir el cuerpo SOAP
+        cuerpo_soap = f"""  
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">  
+            <soapenv:Header>  
+                {cabecera}    
+            </soapenv:Header>  
+           <soapenv:Body>  
+              <and:CertificadoProfesionalTituladoRequest>
+                 <and:tipoCert>15</and:tipoCert>  
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
+                 <and:documento>{documento}</and:documento>  
+                 <and:nombres>{nombres}</and:nombres>  
+                 <and:apellidos>{apellidos}</and:apellidos>  
+                 <and:municipio>{municipio}</and:municipio>  
+                 <and:direccion>{direccion}</and:direccion>  
+                 <and:email>{email}</and:email>  
+                 <and:ocupacion>{ocupacion}</and:ocupacion>
+                 <and:universidad>{universidad}</and:universidad>
+                 <and:tituloprofesional>{tituloprofesional}</and:tituloprofesional>
+                 <and:matriculaprofesional>{matriculaprofesional}</and:matriculaprofesional>
+                 <and:emisortarjetaprofesional>{emisortarjetaprofesional}</and:emisortarjetaprofesional>
+                 <and:facultad>{facultad}</and:facultad>
+                 <and:fechaCert>{fecha_cert}</and:fechaCert>
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
+                 <and:formato>{formato}</and:formato>
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificadoProfesionalTituladoRequest>  
+           </soapenv:Body>  
+        </soapenv:Envelope>  
+        """
+
+        # Enviar la solicitud SOAP  
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
+        headers = {  
+            "Content-Type": "text/xml; charset=utf-8",  
+            "Accept-Encoding": "identity"  
+        }
+
+        # Realizar la solicitud POST
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)  
+
+        if response_soap.status_code == 200:
+            # Analizar el XML para obtener el estado y el mensaje
+            root = ET.fromstring(response_soap.text)
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
+
+            if int(estado) == 0: 
+                return JsonResponse({ 
+                    'status': 'success', 
+                    'message': 'Solicitud enviada correctamente', 
+                    'radicado': mensaje 
+                }) 
+
+            else: 
+                return JsonResponse({ 
+                    'status': 'error', 
+                    'message': 'Error en la solicitud SOAP' 
+                }) 
+
+        else: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
+            }) 
+
+    except Exception as e: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': str(e) 
+        })
+
+
 
 
 def actualizacion_pkcs10(pkcs10, serial, pinso, pin, idsolicitud):
@@ -692,3 +1127,176 @@ def solicitud_vinculacion_empresa(tipo_cert, tipo_doc, documento, nombres, apell
     client = Client(url_servicio)
     resultado = client.service.CertificateVinculacionEmpresaRequest(tipoCert=tipo_cert, tipoDoc=tipo_doc, documento=documento, nombres=nombres, apellidos=apellidos, municipio=municipio, direccion=direccion, email=email, emailEnt=email_ent, telefono=telefono, celular=celular, ocupacion=ocupacion, tipoDocEnt=tipo_doc_ent, documentoEnt=documento_ent, razonsocial=razonsocial, municipioEnt=municipio_ent, direccionEnt=direccion_ent, cargo=cargo, unidadOrganizacional=unidad_organizacional, fechaCert=fecha_cert, formato=formato, vigenciaCert=vigencia_cert, testigo=testigo, foto=foto, pin=pin, pkcs10=pkcs10, soporte=soporte, verific_doc=verific_doc, plantillaHuella=plantilla_huella, token_andesid=token_andesid)
     return resultado
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
