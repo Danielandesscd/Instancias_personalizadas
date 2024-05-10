@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 
 class DATOS(models.Model):
-    id_convenio = models.IntegerField
+    id_conv = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     tipo_doc = models.CharField(max_length=100)

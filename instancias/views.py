@@ -803,9 +803,6 @@ def obtener_titulos(request, universidad_id):
             'message': str(e) 
         })
 
-
-
-
 def radicado_pers_nat(request):  
     # Comprobar si se obtuvo la cabecera SOAP correctamente
     response = credenciales_webservice(request)
@@ -916,7 +913,7 @@ def radicado_pers_nat(request):
                 # Guardar datos en la tabla DATOS
                 print(f"id{id} mensaje{mensaje}")
                 datos = DATOS(
-                    id=id,  # Relacionar con el convenio
+                    id_conv=id,  # Relacionar con el convenio
                     tipo_doc=tipo_doc,
                     nombre=nombres,
                     apellido=apellidos,
@@ -962,130 +959,150 @@ def radicado_pers_nat(request):
             'message': f"Error en la solicitud SOAP: {response_soap.status_code}"
         })
 
+def radicado_pers_nat_rut(request):
+    # Obtener las credenciales del Web Service
+    response = credenciales_webservice(request)
 
-def radicado_pers_nat_rut(request):  
-    response = credenciales_webservice(request)  
-      
-    if isinstance(response, JsonResponse):  
-        response_content = json.loads(response.content)  
-  
-        if response_content['status'] == 'success':  
-            cabecera = response_content['cabecera']  
-    try:  
-         
-  
-        # Validar datos del formulario  
-        tipo_doc = request.POST.get('tipo-documento', '')  
-        documento = request.POST.get('numero-documento', '')  
-        nombres = request.POST.get('nombres', '')  
-        apellidos = request.POST.get('apellidos', '')  
-        municipio = request.POST.get('municipio', '')  
-        direccion = request.POST.get('direccion', '')  
-        email = request.POST.get('correo', '')  
-        telefono = request.POST.get('numero-celular', '')  
-        fecha_cert = request.POST.get('fecha-certificado', '')  
-        vigencia = request.POST.get('vigencia', '')  
-        formato = request.POST.get('formato-entrega', '')  
-  
-        # Verificar campos obligatorios  
-        if not (tipo_doc and documento and nombres and apellidos and municipio and direccion and email):  
-            return JsonResponse({  
-                'status': 'error',  
-                'message': 'Faltan datos obligatorios'  
-            })  
-  
-        #Codificar soporte en base64 si corresponde  
-        soporte = request.FILES.get('documentos', None)  # El nombre del campo que contiene el archivo  
-  
-        if not soporte:  
-            return JsonResponse({  
-                'status': 'error',  
-                'message': 'El archivo .zip no se encontró'  
-            }) 
-        # Leer el contenido del archivo .zip  
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo  
-         
-        # Convertir a base64  
-        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8') 
-  
-        # Construir el cuerpo SOAP  
-        cuerpo_soap = f"""  
-        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">  
-            <soapenv:Header>  
-                {cabecera}    
-            </soapenv:Header>  
-           <soapenv:Body> 
-        <and:CertificadosPersonaNaturalRUTRequest> 
-            <and:tipoCert>15</and:tipoCert> 
-            <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
-            <and:documento>{documento}</and:documento> 
-            <and:nombres>{nombres}</and:nombres> 
-            <and:apellidos>{apellidos}</and:apellidos> 
-            <and:municipio>{municipio}</and:municipio> 
-            <and:direccion>{direccion}</and:direccion> 
-            <and:email>{email}</and:email> 
-            <!--Optional:--> 
-            <and:telefono>{telefono}</and:telefono> 
-            <!--Optional:--> 
-            <and:celular>{telefono}</and:celular> 
-            <!--Optional:--> 
-            
-            <and:fechaCert>{fecha_cert}</and:fechaCert> 
-            <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
-            <and:formato>{formato}</and:formato> 
-            <and:soporte>{soporte_base64}</and:soporte>
-            
-            
-        </and:CertificadosPersonaNaturalRUTRequest> 
-    </soapenv:Body> 
-        </soapenv:Envelope>  
-        """  
+    if isinstance(response, JsonResponse):
+        response_content = json.loads(response.content)
+        if response_content['status'] == 'success':
+            cabecera = response_content['cabecera']
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Error obteniendo las credenciales'
+            })
+        
+    convenios = request.user.CONVENIO.all()
+    if convenios.exists():
+        convenio = convenios.first()
+        id = convenio.id
 
-        #print("cuerpo", cuerpo_soap) 
- 
-        # Enviar la solicitud SOAP  
-        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
-        headers = {  
-            "Content-Type": "text/xml; charset=utf-8",  
-            "Accept-Encoding": "identity"  
-        }   
-  
-        # Realizar la solicitud POST  
-        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers) 
-        print("response soap:",response_soap) 
-        if response_soap.status_code == 200: 
-            # Analizar el XML para obtener el estado y el mensaje 
-            root = ET.fromstring(response_soap.text) 
-           
- 
-            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
-            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
- 
-            if int(estado) == 0: 
-                return JsonResponse({ 
-                    'status': 'success', 
-                    'message': 'Solicitud enviada correctamente', 
-                    'radicado': mensaje 
-                }) 
- 
-            else: 
-                return JsonResponse({ 
-                    'status': 'error', 
-                    'message': 'Error en la solicitud SOAP' 
-                }) 
- 
-        else: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
-            }) 
-     
-    except Exception as e: 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': str(e) 
+    # Validar datos del formulario
+    tipo_doc = request.POST.get('tipo-documento', '')
+    documento = request.POST.get('numero-documento', '')
+    nombres = request.POST.get('nombres', '')
+    apellidos = request.POST.get('apellidos', '')
+    municipio = request.POST.get('municipio', '')
+    direccion = request.POST.get('direccion', '')
+    email = request.POST.get('correo', '')
+    telefono = request.POST.get('numero-celular', '')
+    fecha_cert = request.POST.get('fecha-certificado', '')
+    vigencia = request.POST.get('vigencia', '')
+    formato = request.POST.get('formato-entrega', '')
+
+    # Verificar campos obligatorios
+    if not (tipo_doc, documento, nombres, apellidos, municipio, direccion, email):
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Faltan datos obligatorios'
         })
 
+    # Codificar el soporte en base64 si corresponde
+    soporte = request.FILES.get('documentos', None)  # Campo que contiene el archivo
+
+    if not soporte:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'El archivo .zip no se encontró'
+        })
+
+    # Leer el contenido del archivo .zip y convertir a base64
+    contenido_zip = soporte.read()
+    soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
+
+    # Construir el cuerpo SOAP
+    cuerpo_soap = f"""
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
+        <soapenv:Header>
+            {cabecera}
+        </soapenv:Header>
+        <soapenv:Body>
+            <and:CertificadosPersonaNaturalRUTRequest>
+                <and:tipoCert>15</and:tipoCert>
+                <and:tipoDoc>{tipo_doc}</and:tipoDoc>
+                <and:documento>{documento}</and:documento>
+                <and:nombres>{nombres}</and:nombres>
+                <and:apellidos>{apellidos}</and:apellidos>
+                <and:municipio>{municipio}</and:municipio>
+                <and:direccion>{direccion}</and:direccion>
+                <and:email>{email}</and:email>
+                <and:telefono>{telefono}</and:telefono>
+                <and:celular>{telefono}</and:celular>
+                <and:fechaCert>{fecha_cert}</and:fechaCert>
+                <and:vigenciaCert>{vigencia}</and:vigenciaCert>
+                <and:formato>{formato}</and:formato>
+                <and:soporte>{soporte_base64}</and:soporte>
+            </and:CertificadosPersonaNaturalRUTRequest>
+        </soapenv:Body>
+    </soapenv:Envelope>
+    """
+    #print(cuerpo_soap)
+    # Enviar la solicitud SOAP
+    soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+    headers = {
+        "Content-Type": "text/xml; charset=utf-8",
+        "Accept-Encoding": "identity"
+    }
+
+    # Realizar la solicitud POST
+    response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
+
+    if response_soap.status_code == 200:
+        try:
+            # Analizar la respuesta SOAP
+            root = ET.fromstring(response_soap.text)
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
+            print(mensaje)
+            if int(estado) == 0:
+                # Guardar datos en la base de datos usando el modelo DATOS
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    tipo_certificado=15,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                )
+
+                datos.save()  # Guardar en la base de datos
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Solicitud enviada correctamente',
+                    'radicado': mensaje
+                })
+
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Error en la solicitud SOAP'
+                })
+
+        except ET.ParseError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Error al analizar el XML de respuesta SOAP'
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f"Error desconocido: {str(e)}"
+            })
+
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': f"Error en la solicitud SOAP: {response_soap.status_code}"
+        })
 
 def radicado_prof_titulado(request):
     try:
@@ -1093,6 +1110,11 @@ def radicado_prof_titulado(request):
         response = credenciales_webservice(request)
         if not isinstance(response, JsonResponse):
             return JsonResponse({'status': 'error', 'message': 'Error al obtener credenciales'})
+        
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         response_content = json.loads(response.content)
         if response_content['status'] != 'success':
@@ -1116,7 +1138,7 @@ def radicado_prof_titulado(request):
         
         ocupacion = request.POST.get('ocupacion', '')
         universidad = request.POST.get('universidad', '')
-        tituloprofesional = request.POST.get('titulos_profesionales', '')
+        tituloprofesional = request.POST.get('tituloprofesional', '')
         matriculaprofesional = request.POST.get('matricula_profesional', '')
         emisortarjetaprofesional = request.POST.get('emisortarjetaprofesional', '')
         facultad = request.POST.get('facultad', '')
@@ -1142,7 +1164,7 @@ def radicado_prof_titulado(request):
             </soapenv:Header>  
            <soapenv:Body>  
               <and:CertificadoProfesionalTituladoRequest>
-                 <and:tipoCert>15</and:tipoCert>  
+                 <and:tipoCert>7</and:tipoCert>  
                  <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
                  <and:documento>{documento}</and:documento>  
                  <and:nombres>{nombres}</and:nombres>  
@@ -1150,7 +1172,7 @@ def radicado_prof_titulado(request):
                  <and:municipio>{municipio}</and:municipio>  
                  <and:direccion>{direccion}</and:direccion>  
                  <and:email>{email}</and:email> 
-                 <and:telefono>{telefono}</and:telefono>  
+                 <and:celular>{telefono}</and:celular>  
                  <and:universidad>{universidad}</and:universidad>
                  <and:tituloprofesional>{tituloprofesional}</and:tituloprofesional>
                  <and:matriculaprofesional>{matriculaprofesional}</and:matriculaprofesional>
@@ -1165,7 +1187,7 @@ def radicado_prof_titulado(request):
         </soapenv:Envelope>  
         """
         
-        print("cuerpo-soap:", cuerpo_soap)
+        #print("cuerpo-soap:", cuerpo_soap)
 
         # Enviar la solicitud SOAP  
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
@@ -1208,26 +1230,31 @@ def radicado_prof_titulado(request):
             'message': str(e) 
         })
 
-
-
 def radicado_pert_empresa(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener cabecera de credenciales
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
         tipo_doc = request.POST.get('tipo-documento', '')
         documento = request.POST.get('numero-documento', '')
         nombres = request.POST.get('nombres', '')
         apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
+        municipio_persona = request.POST.get('municipio-persona', '')
+        municipio_empresa = request.POST.get('municipio-empresa', '')
         direccion = request.POST.get('direccion', '')
         email = request.POST.get('correo', '')
         emailEnt = request.POST.get('correo-entidad', '')
@@ -1241,15 +1268,14 @@ def radicado_pert_empresa(request):
         fecha_cert = request.POST.get('fecha-certificado', '')
         formato = request.POST.get('formato-entrega', '')
         vigencia = request.POST.get('vigencia', '')
-        
-        
+
         # Verificar campos obligatorios
         if not (tipo_doc and documento and nombres and apellidos and direccion and email):
             return JsonResponse({
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
@@ -1260,25 +1286,13 @@ def radicado_pert_empresa(request):
 
         # Leer y codificar el soporte
         contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
-
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
         cuerpo_soap = f"""
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
            <soapenv:Body>
               <and:CertificateVinculacionEmpresaRequest>
@@ -1308,7 +1322,7 @@ def radicado_pert_empresa(request):
            </soapenv:Body>
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
@@ -1316,27 +1330,47 @@ def radicado_pert_empresa(request):
             "Accept-Encoding": "identity"
         }
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
             # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
-            print("mensaje:", mensaje)
-
+            print(mensaje)
             if int(estado) == 0:
-                
+                # Guardar en la base de datos
+                datos = DATOS( 
+                    id_conv=id,
+                    tipo_doc=tipo_doc, 
+                    nombre=nombres, 
+                    apellido=apellidos, 
+                    numero_doc=documento, 
+                    correo=email, 
+                    direccion=direccion, 
+                    municipio=municipio_persona, 
+                    ocupacion=ocupacion, 
+                    cargo=cargo, 
+                    unidad_organizacional=unidad_organizacional, 
+                    formato_entrega=formato, 
+                    vigencia=vigencia, 
+                    radicado=mensaje, 
+                    tipo_certificado=9,
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -1345,50 +1379,58 @@ def radicado_pert_empresa(request):
 
     except Exception as e:
         return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        })
+                'status': 'error',
+                'message': f"Error desconocido: {str(e)}"
+            })
+
 
 def radicado_fun_publica(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener credenciales para el Web Service
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+            
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')
-        documento = request.POST.get('numero-documento', '')
-        nombres = request.POST.get('nombres', '')
-        apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
-        direccion = request.POST.get('direccion', '')
-        email = request.POST.get('correo', '')
-        emailEnt = request.POST.get('correo-entidad', '')
-        celular = request.POST.get('celular', '')
-        ocupacion = request.POST.get('ocupacion', '')
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')
-        documento_ent = request.POST.get('numero-documento-entidad', '')
-        razon_social = request.POST.get('razon-social', '')
-        cargo = request.POST.get('cargo', '')
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')
-        fecha_cert = request.POST.get('fecha-certificado', '')
-        formato = request.POST.get('formato-entrega', '')
+        tipo_doc = request.POST.get('tipo-documento', '') 
+        documento = request.POST.get('numero-documento', '') 
+        nombres = request.POST.get('nombres', '') 
+        apellidos = request.POST.get('apellidos', '') 
+        municipio_persona = request.POST.get('municipio-persona', None)  
+        municipio_empresa = request.POST.get('municipio-empresa', None) 
+        direccion = request.POST.get('direccion', '') 
+        email = request.POST.get('correo', '') 
+        emailEnt = request.POST.get('correo-entidad', '') 
+        celular = request.POST.get('celular', '') 
+        ocupacion = request.POST.get('ocupacion', '') 
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '') 
+        documento_ent = request.POST.get('numero-documento-entidad', '') 
+        razon_social = request.POST.get('razon-social', '') 
+        cargo = request.POST.get('cargo', '') 
+        unidad_organizacional = request.POST.get('unidad-organizacional', '') 
+        fecha_cert = request.POST.get('fecha-certificado', '') 
+        formato = request.POST.get('formato-entrega', '') 
         vigencia = request.POST.get('vigencia', '')
-        
-        
-        # Verificar campos obligatorios
-        if not (tipo_doc and documento and nombres and apellidos and direccion and email):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Faltan datos obligatorios'
+
+        # Verificar campos obligatorios 
+        if not (tipo_doc and documento and nombres and apellidos and direccion and email): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Faltan datos obligatorios' 
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
@@ -1399,83 +1441,93 @@ def radicado_fun_publica(request):
 
         # Leer y codificar el soporte
         contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
-
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
         cuerpo_soap = f"""
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
-           <soapenv:Body>
-              <and:CertificateVinculacionEmpresaRequest>
-                 <and:tipoCert>12</and:tipoCert>
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>
-                 <and:documento>{documento}</and:documento>
-                 <and:nombres>{nombres}</and:nombres>
-                 <and:apellidos>{apellidos}</and:apellidos>
-                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección
-                 <and:direccion>{direccion}</and:direccion>
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:celular>{celular}</and:celular>
-                 <and:ocupacion>{ocupacion}</and:ocupacion>
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>
-                 <and:razonsocial>{razon_social}</and:razonsocial>
-                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección
-                 <and:direccionEnt>{direccion}</and:direccionEnt>
-                 <and:cargo>{cargo}</and:cargo>
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>
-                 <and:formato>{formato}</and:formato>
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
-                 <and:soporte>{soporte_base64}</and:soporte>
-              </and:CertificateVinculacionEmpresaRequest>
+           <soapenv:Body> 
+              <and:CertificateVinculacionEmpresaRequest> 
+                 <and:tipoCert>12</and:tipoCert> 
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
+                 <and:documento>{documento}</and:documento> 
+                 <and:nombres>{nombres}</and:nombres> 
+                 <and:apellidos>{apellidos}</and:apellidos> 
+                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección 
+                 <and:direccion>{direccion}</and:direccion> 
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:celular>{celular}</and:celular> 
+                 <and:ocupacion>{ocupacion}</and:ocupacion> 
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt> 
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt> 
+                 <and:razonsocial>{razon_social}</and:razonsocial> 
+                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección 
+                 <and:direccionEnt>{direccion}</and:direccionEnt> 
+                 <and:cargo>{cargo}</and:cargo> 
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert> 
+                 <and:formato>{formato}</and:formato> 
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificateVinculacionEmpresaRequest> 
            </soapenv:Body>
+
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
             "Accept-Encoding": "identity"
         }
+
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
             # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
             print("mensaje:", mensaje)
-
             if int(estado) == 0:
-                
+                # Guardar en la base de datos solo con campos permitidos
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio_persona,
+                    ocupacion=ocupacion,
+                    cargo=cargo,
+                    unidad_organizacional=unidad_organizacional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje, 
+                    tipo_certificado=12,
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -1485,50 +1537,55 @@ def radicado_fun_publica(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error desconocido: {str(e)}"
         })
-
 
 def radicado_perso_juridica(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener credenciales para el Web Service
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')
-        documento = request.POST.get('numero-documento', '')
-        nombres = request.POST.get('nombres', '')
-        apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
-        direccion = request.POST.get('direccion', '')
-        email = request.POST.get('correo', '')
-        emailEnt = request.POST.get('correo-entidad', '')
-        celular = request.POST.get('celular', '')
-        ocupacion = request.POST.get('ocupacion', '')
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')
-        documento_ent = request.POST.get('numero-documento-entidad', '')
-        razon_social = request.POST.get('razon-social', '')
-        cargo = request.POST.get('cargo', '')
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')
-        fecha_cert = request.POST.get('fecha-certificado', '')
-        formato = request.POST.get('formato-entrega', '')
+        tipo_doc = request.POST.get('tipo-documento', '') 
+        documento = request.POST.get('numero-documento', '') 
+        nombres = request.POST.get('nombres', '') 
+        apellidos = request.POST.get('apellidos', '') 
+        municipio_persona = request.POST.get('municipio-persona', None)  
+        municipio_empresa = request.POST.get('municipio-empresa', None) 
+        direccion = request.POST.get('direccion', '') 
+        email = request.POST.get('correo', '') 
+        emailEnt = request.POST.get('correo-entidad', '') 
+        celular = request.POST.get('celular', '') 
+        ocupacion = request.POST.get('ocupacion', '') 
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '') 
+        documento_ent = request.POST.get('numero-documento-entidad', '') 
+        razon_social = request.POST.get('razon-social', '') 
+        cargo = request.POST.get('cargo', '') 
+        unidad_organizacional = request.POST.get('unidad-organizacional', '') 
+        fecha_cert = request.POST.get('fecha-certificado', '') 
+        formato = request.POST.get('formato-entrega', '') 
         vigencia = request.POST.get('vigencia', '')
-        
-        
+
         # Verificar campos obligatorios
-        if not (tipo_doc and documento and nombres and apellidos and direccion and email):
+        if not (tipo_doc, documento, nombres, apellidos, direccion, email):
             return JsonResponse({
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
@@ -1539,83 +1596,92 @@ def radicado_perso_juridica(request):
 
         # Leer y codificar el soporte
         contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
-
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
         cuerpo_soap = f"""
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
-           <soapenv:Body>
-              <and:CertificateVinculacionEmpresaRequest>
-                 <and:tipoCert>13</and:tipoCert>
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>
-                 <and:documento>{documento}</and:documento>
-                 <and:nombres>{nombres}</and:nombres>
-                 <and:apellidos>{apellidos}</and:apellidos>
-                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección
-                 <and:direccion>{direccion}</and:direccion>
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:celular>{celular}</and:celular>
-                 <and:ocupacion>{ocupacion}</and:ocupacion>
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>
-                 <and:razonsocial>{razon_social}</and:razonsocial>
-                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección
-                 <and:direccionEnt>{direccion}</and:direccionEnt>
-                 <and:cargo>{cargo}</and:cargo>
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>
-                 <and:formato>{formato}</and:formato>
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
-                 <and:soporte>{soporte_base64}</and:soporte>
-              </and:CertificateVinculacionEmpresaRequest>
+           <soapenv:Body> 
+              <and:CertificateVinculacionEmpresaRequest> 
+                 <and:tipoCert>13</and:tipoCert> 
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
+                 <and:documento>{documento}</and:documento> 
+                 <and:nombres>{nombres}</and:nombres> 
+                 <and:apellidos>{apellidos}</and:apellidos> 
+                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección 
+                 <and:direccion>{direccion}</and:direccion> 
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:celular>{celular}</and:celular> 
+                 <and:ocupacion>{ocupacion}</and:ocupacion> 
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt> 
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt> 
+                 <and:razonsocial>{razon_social}</and:razonsocial> 
+                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección 
+                 <and:direccionEnt>{direccion}</and:direccionEnt> 
+                 <and:cargo>{cargo}</and:cargo> 
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert> 
+                 <and:formato>{formato}</and:formato> 
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificateVinculacionEmpresaRequest> 
            </soapenv:Body>
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
             "Accept-Encoding": "identity"
         }
+
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
             # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
             print("mensaje:", mensaje)
-
             if int(estado) == 0:
-                
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio_persona,
+                    ocupacion=ocupacion,
+                    cargo=cargo,
+                    unidad_organizacional=unidad_organizacional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=13,
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -1625,10 +1691,8 @@ def radicado_perso_juridica(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error desconocido: {str(e)}"
         })
-
-
 
 def radicado_fe_natural(request):
     try:
@@ -1639,31 +1703,38 @@ def radicado_fe_natural(request):
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Devolver el error si las credenciales fallan
-        
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
+
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')  
-        documento = request.POST.get('numero-documento', '')  
-        nombres = request.POST.get('nombres', '')  
-        apellidos = request.POST.get('apellidos', '')  
-        municipio = request.POST.get('municipio-persona', '')  
-        direccion = request.POST.get('direccion', '')  
-        email = request.POST.get('correo', '')  
-        telefono = request.POST.get('telefono', '')  
-        celular = request.POST.get('celular', '')  
-        ocupacion = request.POST.get('ocupacion', '')  
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')  
-        documento_ent = request.POST.get('numero-documento-entidad', '')  
-        razon_social = request.POST.get('razon-social', '')  
-        municipio_ent = request.POST.get('municipio-empresa', '')  
-        direccion_ent = request.POST.get('direccion-entidad', '')  
-        emailEnt = request.POST.get('correo-entidad', '') 
-        cargo = request.POST.get('cargo', '')  
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')  
-        organizacion_factel = request.POST.get('organizacion-factel', '')  
-        fecha_cert = request.POST.get('fecha-certificado', '')  
-        formato = request.POST.get('formato-entrega', '')  
-        vigencia = request.POST.get('vigencia', '')  
+        tipo_doc = request.POST.get('tipo-documento', '')   
+        documento = request.POST.get('numero-documento', '')   
+        nombres = request.POST.get('nombres', '')   
+        apellidos = request.POST.get('apellidos', '')   
+        municipio = request.POST.get('municipio-persona', '')   
+        direccion = request.POST.get('direccion', '')   
+        email = request.POST.get('correo', '')   
+        telefono = request.POST.get('telefono', '')   
+        celular = request.POST.get('celular', '')   
+        ocupacion = request.POST.get('ocupacion', '')   
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')   
+        documento_ent = request.POST.get('numero-documento-entidad', '')   
+        razon_social = request.POST.get('razon-social', '')   
+        municipio_ent = request.POST.get('municipio-empresa', '')   
+        direccion_ent = request.POST.get('direccion-entidad', '')   
+        emailEnt = request.POST.get('correo-entidad', '')  
+        cargo = request.POST.get('cargo', '')   
+        unidad_organizacional = request.POST.get('unidad-organizacional', '')   
+        organizacion_factel = request.POST.get('organizacion-factel', '')   
+        fecha_cert = request.POST.get('fecha-certificado', '')   
+        formato = request.POST.get('formato-entrega', '')   
+        vigencia = request.POST.get('vigencia', '')
 
         # Verificar campos obligatorios
         campos_obligatorios = [tipo_doc, documento, nombres, apellidos, municipio, direccion, email]
@@ -1672,15 +1743,15 @@ def radicado_fe_natural(request):
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si corresponde
-        soporte = request.FILES.get('documentos', None)  
+        soporte = request.FILES.get('documentos', None)
         if not soporte:
             return JsonResponse({
                 'status': 'error',
                 'message': 'El archivo de soporte no se encontró'
             })
-        
+
         contenido_zip = soporte.read()  # Leer todo el contenido del archivo
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
@@ -1690,71 +1761,93 @@ def radicado_fe_natural(request):
             <soapenv:Header>  
                 {cabecera}  
             </soapenv:Header>  
-           <soapenv:Body>  
-              <and:CertificadoFacturacionElectronicaRequest>
-                 <and:tipoCert>10</and:tipoCert>  
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
-                 <and:documento>{documento}</and:documento>  
-                 <and:nombres>{nombres}</and:nombres>  
-                 <and:apellidos>{apellidos}</and:apellidos>  
-                 <and:municipio>{municipio}</and:municipio>  
-                 <and:direccion>{direccion}</and:direccion>  
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:telefono>{telefono}</and:telefono>  
-                 <and:celular>{celular}</and:celular>  
-                 <and:ocupacion>{ocupacion}</and:ocupacion>  
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>  
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>  
-                 <and:razonsocial>{razon_social}</and:razonsocial>  
-                 <and:municipioEnt>{municipio_ent}</and:municipioEnt>  
-                 <and:direccionEnt>{direccion_ent}</and:direccionEnt>  
-                 <and:cargo>{cargo}</and:cargo>  
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>  
-                 <and:organizacionFactel>{organizacion_factel}</and:organizacionFactel>  
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>  
-                 <and:formato>{formato}</and:formato>  
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>  
-                 <and:soporte>{soporte_base64}</and:soporte>  
-              </and:CertificadoFacturacionElectronicaRequest>  
-           </soapenv:Body>  
+           <soapenv:Body>   
+              <and:CertificadoFacturacionElectronicaRequest> 
+                 <and:tipoCert>10</and:tipoCert>   
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>   
+                 <and:documento>{documento}</and:documento>   
+                 <and:nombres>{nombres}</and:nombres>   
+                 <and:apellidos>{apellidos}</and:apellidos>   
+                 <and:municipio>{municipio}</and:municipio>   
+                 <and:direccion>{direccion}</and:direccion>   
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:telefono>{telefono}</and:telefono>   
+                 <and:celular>{celular}</and:celular>   
+                 <and:ocupacion>{ocupacion}</and:ocupacion>   
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>   
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt>   
+                 <and:razonsocial>{razon_social}</and:razonsocial>   
+                 <and:municipioEnt>{municipio_ent}</and:municipioEnt>   
+                 <and:direccionEnt>{direccion_ent}</and:direccionEnt>   
+                 <and:cargo>{cargo}</and:cargo>   
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>   
+                 <and:organizacionFactel>{organizacion_factel}</and:organizacionFactel>   
+                 <and:fechaCert>{fecha_cert}</and:fechaCert>   
+                 <and:formato>{formato}</and:formato>   
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>   
+                 <and:soporte>{soporte_base64}</and:soporte>   
+              </and:CertificadoFacturacionElectronicaRequest>   
+           </soapenv:Body> 
         </soapenv:Envelope>  
-        """  
-    
-        # Realizar la solicitud SOAP  
-        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
-        headers = {  
-            "Content-Type": "text/xml; charset=utf-8",  
-            "Accept-Encoding": "identity"  
-        }  
-    
-        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)  
-        if response_soap.status_code == 200: 
-            root = ET.fromstring(response_soap.text) 
-            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
-            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
-            print("mensaje:", mensaje)
-            if int(estado) == 0: 
-                return JsonResponse({ 
-                    'status': 'success', 
-                    'message': 'Solicitud enviada correctamente', 
-                    'radicado': mensaje 
-                }) 
-            else: 
-                return JsonResponse({ 
-                    'status': 'error', 
-                    'message': 'Error en la solicitud SOAP' 
-                }) 
-        else: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
-            }) 
+        """
 
-    except Exception as e: 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': str(e) 
+        # Realizar la solicitud SOAP
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+            "Accept-Encoding": "identity"
+        }
+
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
+
+        if response_soap.status_code == 200:
+            root = ET.fromstring(response_soap.text)
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
+
+            if int(estado) == 0:
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio,
+                    ocupacion=ocupacion,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=10,
+                )
+
+                datos.save()  # Guardar en la base de datos
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Solicitud enviada correctamente',
+                    'radicado': mensaje
+                })
+
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Error en la solicitud SOAP'
+                })
+
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': f"Error en la solicitud SOAP: {response_soap.status_code}"
+            })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f"Error desconocido: {str(e)}"
         })
 
 def radicado_fe_juridica(request):
@@ -1766,31 +1859,38 @@ def radicado_fe_juridica(request):
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Devolver el error si las credenciales fallan
-        
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
+
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')  
-        documento = request.POST.get('numero-documento', '')  
-        nombres = request.POST.get('nombres', '')  
-        apellidos = request.POST.get('apellidos', '')  
-        municipio = request.POST.get('municipio-persona', '')  
-        direccion = request.POST.get('direccion', '')  
-        email = request.POST.get('correo', '')  
-        telefono = request.POST.get('telefono', '')  
-        celular = request.POST.get('celular', '')  
-        ocupacion = request.POST.get('ocupacion', '')  
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')  
-        documento_ent = request.POST.get('numero-documento-entidad', '')  
-        razon_social = request.POST.get('razon-social', '')  
-        municipio_ent = request.POST.get('municipio-empresa', '')  
-        direccion_ent = request.POST.get('direccion-entidad', '')  
-        emailEnt = request.POST.get('correo-entidad', '') 
-        cargo = request.POST.get('cargo', '')  
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')  
-        organizacion_factel = request.POST.get('organizacion-factel', '')  
-        fecha_cert = request.POST.get('fecha-certificado', '')  
-        formato = request.POST.get('formato-entrega', '')  
-        vigencia = request.POST.get('vigencia', '')  
+        tipo_doc = request.POST.get('tipo-documento', '')   
+        documento = request.POST.get('numero-documento', '')   
+        nombres = request.POST.get('nombres', '')   
+        apellidos = request.POST.get('apellidos', '')   
+        municipio = request.POST.get('municipio-persona', '')   
+        direccion = request.POST.get('direccion', '')   
+        email = request.POST.get('correo', '')   
+        telefono = request.POST.get('telefono', '')   
+        celular = request.POST.get('celular', '')   
+        ocupacion = request.POST.get('ocupacion', '')   
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')   
+        documento_ent = request.POST.get('numero-documento-entidad', '')   
+        razon_social = request.POST.get('razon-social', '')   
+        municipio_ent = request.POST.get('municipio-empresa', '')   
+        direccion_ent = request.POST.get('direccion-entidad', '')   
+        emailEnt = request.POST.get('correo-entidad', '')  
+        cargo = request.POST.get('cargo', '')   
+        unidad_organizacional = request.POST.get('unidad-organizacional', '')   
+        organizacion_factel = request.POST.get('organizacion-factel', '')   
+        fecha_cert = request.POST.get('fecha-certificado', '')   
+        formato = request.POST.get('formato-entrega', '')   
+        vigencia = request.POST.get('vigencia', '')
 
         # Verificar campos obligatorios
         campos_obligatorios = [tipo_doc, documento, nombres, apellidos, municipio, direccion, email]
@@ -1799,15 +1899,15 @@ def radicado_fe_juridica(request):
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si corresponde
-        soporte = request.FILES.get('documentos', None)  
+        soporte = request.FILES.get('documentos', None)
         if not soporte:
             return JsonResponse({
                 'status': 'error',
                 'message': 'El archivo de soporte no se encontró'
             })
-        
+
         contenido_zip = soporte.read()  # Leer todo el contenido del archivo
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
@@ -1817,202 +1917,236 @@ def radicado_fe_juridica(request):
             <soapenv:Header>  
                 {cabecera}  
             </soapenv:Header>  
-           <soapenv:Body>  
-              <and:CertificadoFacturacionElectronicaRequest>
-                 <and:tipoCert>11</and:tipoCert>  
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>  
-                 <and:documento>{documento}</and:documento>  
-                 <and:nombres>{nombres}</and:nombres>  
-                 <and:apellidos>{apellidos}</and:apellidos>  
-                 <and:municipio>{municipio}</and:municipio>  
-                 <and:direccion>{direccion}</and:direccion>  
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:telefono>{telefono}</and:telefono>  
-                 <and:celular>{celular}</and:celular>  
-                 <and:ocupacion>{ocupacion}</and:ocupacion>  
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>  
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>  
-                 <and:razonsocial>{razon_social}</and:razonsocial>  
-                 <and:municipioEnt>{municipio_ent}</and:municipioEnt>  
-                 <and:direccionEnt>{direccion_ent}</and:direccionEnt>  
-                 <and:cargo>{cargo}</and:cargo>  
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
-                 <and:organizacionFactel>{organizacion_factel}</and:organizacionFactel>  
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>  
-                 <and:formato>{formato}</and:formato>  
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>  
-                 <and:soporte>{soporte_base64}</and:soporte>  
-              </and:CertificadoFacturacionElectronicaRequest>  
-           </soapenv:Body>  
+           <soapenv:Body>   
+              <and:CertificadoFacturacionElectronicaRequest> 
+                 <and:tipoCert>11</and:tipoCert>   
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>   
+                 <and:documento>{documento}</and:documento>   
+                 <and:nombres>{nombres}</and:nombres>   
+                 <and:apellidos>{apellidos}</and:apellidos>   
+                 <and:municipio>{municipio}</and:municipio>   
+                 <and:direccion>{direccion}</and:direccion>   
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:telefono>{telefono}</and:telefono>   
+                 <and:celular>{celular}</and:celular>   
+                 <and:ocupacion>{ocupacion}</and:ocupacion>   
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>   
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt>   
+                 <and:razonsocial>{razon_social}</and:razonsocial>   
+                 <and:municipioEnt>{municipio_ent}</and:municipioEnt>   
+                 <and:direccionEnt>{direccion_ent}</and:direccionEnt>   
+                 <and:cargo>{cargo}</and:cargo>   
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>  
+                 <and:organizacionFactel>{organizacion_factel}</and:organizacionFactel>   
+                 <and:fechaCert>{fecha_cert}</and:fechaCert>   
+                 <and:formato>{formato}</and:formato>   
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>   
+                 <and:soporte>{soporte_base64}</and:soporte>   
+              </and:CertificadoFacturacionElectronicaRequest>   
+           </soapenv:Body> 
         </soapenv:Envelope>  
-        """  
+        """
     
         # Realizar la solicitud SOAP  
-        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"  
-        headers = {  
-            "Content-Type": "text/xml; charset=utf-8",  
-            "Accept-Encoding": "identity"  
-        }  
-    
-        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)  
-        if response_soap.status_code == 200: 
-            root = ET.fromstring(response_soap.text) 
-            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text 
-            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
-            print("mensaje:", mensaje)
-            if int(estado) == 0: 
-                return JsonResponse({ 
-                    'status': 'success', 
-                    'message': 'Solicitud enviada correctamente', 
-                    'radicado': mensaje 
-                }) 
-            else: 
-                return JsonResponse({ 
-                    'status': 'error', 
-                    'message': 'Error en la solicitud SOAP' 
-                }) 
-        else: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': f"Error en la solicitud SOAP: {response_soap.status_code}" 
-            }) 
+        soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+            "Accept-Encoding": "identity"
+        }
 
-    except Exception as e: 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': str(e) 
+        response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
+
+        if response_soap.status_code == 200:
+            root = ET.fromstring(response_soap.text)
+            estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
+            mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
+
+            if int(estado) == 0:
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio,
+                    ocupacion=ocupacion,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=11,
+                )
+
+                datos.save()  # Guardar en la base de datos
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Solicitud enviada correctamente',
+                    'radicado': mensaje
+                })
+
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Error en la solicitud SOAP'
+                })
+
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': f"Error en la solicitud SOAP: {response_soap.status_code}"
+            })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f"Error desconocido: {str(e)}"
         })
-
-
 
 def radicado_com_academica(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener cabecera de autenticación
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')
-        documento = request.POST.get('numero-documento', '')
-        nombres = request.POST.get('nombres', '')
-        apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
-        direccion = request.POST.get('direccion', '')
-        email = request.POST.get('correo', '')
-        emailEnt = request.POST.get('correo-entidad', '')
-        celular = request.POST.get('celular', '')
-        ocupacion = request.POST.get('ocupacion', '')
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')
-        documento_ent = request.POST.get('numero-documento-entidad', '')
-        razon_social = request.POST.get('razon-social', '')
-        cargo = request.POST.get('cargo', '')
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')
-        fecha_cert = request.POST.get('fecha-certificado', '')
-        formato = request.POST.get('formato-entrega', '')
+        tipo_doc = request.POST.get('tipo-documento', '') 
+        documento = request.POST.get('numero-documento', '') 
+        nombres = request.POST.get('nombres', '') 
+        apellidos = request.POST.get('apellidos', '') 
+        municipio_persona = request.POST.get('municipio-persona', None)  
+        municipio_empresa = request.POST.get('municipio-empresa', None) 
+        direccion = request.POST.get('direccion', '') 
+        email = request.POST.get('correo', '') 
+        emailEnt = request.POST.get('correo-entidad', '') 
+        celular = request.POST.get('celular', '') 
+        ocupacion = request.POST.get('ocupacion', '') 
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '') 
+        documento_ent = request.POST.get('numero-documento-entidad', '') 
+        razon_social = request.POST.get('razon-social', '') 
+        cargo = request.POST.get('cargo', '') 
+        unidad_organizacional = request.POST.get('unidad-organizacional', '') 
+        fecha_cert = request.POST.get('fecha-certificado', '') 
+        formato = request.POST.get('formato-entrega', '') 
         vigencia = request.POST.get('vigencia', '')
-        
-        
+
         # Verificar campos obligatorios
-        if not (tipo_doc and documento and nombres and apellidos and direccion and email):
+        campos_obligatorios = [tipo_doc, documento, nombres, apellidos, municipio_persona, direccion, email]
+        if not all(campos_obligatorios):
             return JsonResponse({
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
             return JsonResponse({
                 'status': 'error',
-                'message': 'El archivo .zip no se encontró'
+                'message': 'El archivo de soporte no se encontró'
             })
 
-        # Leer y codificar el soporte
-        contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
-        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
-
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
-        cuerpo_soap = f"""
+        cuerpo_soap = f"""  
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
-           <soapenv:Body>
-              <and:CertificateVinculacionEmpresaRequest>
-                 <and:tipoCert>6</and:tipoCert>
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>
-                 <and:documento>{documento}</and:documento>
-                 <and:nombres>{nombres}</and:nombres>
-                 <and:apellidos>{apellidos}</and:apellidos>
-                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección
-                 <and:direccion>{direccion}</and:direccion>
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:celular>{celular}</and:celular>
-                 <and:ocupacion>{ocupacion}</and:ocupacion>
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>
-                 <and:razonsocial>{razon_social}</and:razonsocial>
-                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección
-                 <and:direccionEnt>{direccion}</and:direccionEnt>
-                 <and:cargo>{cargo}</and:cargo>
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>
-                 <and:formato>{formato}</and:formato>
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
-                 <and:soporte>{soporte_base64}</and:soporte>
-              </and:CertificateVinculacionEmpresaRequest>
+           <soapenv:Body> 
+              <and:CertificateVinculacionEmpresaRequest> 
+                 <and:tipoCert>6</and:tipoCert> 
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
+                 <and:documento>{documento}</and:documento> 
+                 <and:nombres>{nombres}</and:nombres> 
+                 <and:apellidos>{apellidos}</and:apellidos> 
+                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección 
+                 <and:direccion>{direccion}</and:direccion> 
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:celular>{celular}</and:celular> 
+                 <and:ocupacion>{ocupacion}</and:ocupacion> 
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt> 
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt> 
+                 <and:razonsocial>{razon_social}</and:razonsocial> 
+                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección 
+                 <and:direccionEnt>{direccion}</and:direccionEnt> 
+                 <and:cargo>{cargo}</and:cargo> 
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert> 
+                 <and:formato>{formato}</and:formato> 
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificateVinculacionEmpresaRequest> 
            </soapenv:Body>
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
             "Accept-Encoding": "identity"
         }
+
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
-            # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
-            print("mensaje:", mensaje)
 
             if int(estado) == 0:
-                
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio_persona,
+                    ocupacion=ocupacion,
+                    cargo=cargo,
+                    unidad_organizacional=unidad_organizacional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=6,
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -2022,139 +2156,150 @@ def radicado_com_academica(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error desconocido: {str(e)}"
         })
-
-
-
 
 def radicado_com_siif(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener cabecera de autenticación
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')
-        documento = request.POST.get('numero-documento', '')
-        nombres = request.POST.get('nombres', '')
-        apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
-        direccion = request.POST.get('direccion', '')
-        email = request.POST.get('correo', '')
-        emailEnt = request.POST.get('correo-entidad', '')
-        celular = request.POST.get('celular', '')
-        ocupacion = request.POST.get('ocupacion', '')
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')
-        documento_ent = request.POST.get('numero-documento-entidad', '')
-        razon_social = request.POST.get('razon-social', '')
-        cargo = request.POST.get('cargo', '')
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')
-        fecha_cert = request.POST.get('fecha-certificado', '')
-        formato = request.POST.get('formato-entrega', '')
+        tipo_doc = request.POST.get('tipo-documento', '') 
+        documento = request.POST.get('numero-documento', '') 
+        nombres = request.POST.get('nombres', '') 
+        apellidos = request.POST.get('apellidos', '') 
+        municipio_persona = request.POST.get('municipio-persona', None)  
+        municipio_empresa = request.POST.get('municipio-empresa', None) 
+        direccion = request.POST.get('direccion', '') 
+        email = request.POST.get('correo', '') 
+        emailEnt = request.POST.get('correo-entidad', '') 
+        celular = request.POST.get('celular', '') 
+        ocupacion = request.POST.get('ocupacion', '') 
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '') 
+        documento_ent = request.POST.get('numero-documento-entidad', '') 
+        razon_social = request.POST.get('razon-social', '') 
+        cargo = request.POST.get('cargo', '') 
+        unidad_organizacional = request.POST.get('unidad-organizacional', '') 
+        fecha_cert = request.POST.get('fecha-certificado', '') 
+        formato = request.POST.get('formato-entrega', '') 
         vigencia = request.POST.get('vigencia', '')
-        
-        
+
         # Verificar campos obligatorios
-        if not (tipo_doc and documento and nombres and apellidos and direccion and email):
+        campos_obligatorios = [tipo_doc, documento, nombres, apellidos, municipio_persona, direccion, email]
+        if not all(campos_obligatorios):
             return JsonResponse({
                 'status': 'error',
                 'message': 'Faltan datos obligatorios'
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
             return JsonResponse({
                 'status': 'error',
-                'message': 'El archivo .zip no se encontró'
+                'message': 'El archivo de soporte no se encontró'
             })
 
-        # Leer y codificar el soporte
-        contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
-        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
-
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
-        cuerpo_soap = f"""
+        cuerpo_soap = f"""  
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
-           <soapenv:Body>
-              <and:CertificateVinculacionEmpresaRequest>
-                 <and:tipoCert>14</and:tipoCert>
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>
-                 <and:documento>{documento}</and:documento>
-                 <and:nombres>{nombres}</and:nombres>
-                 <and:apellidos>{apellidos}</and:apellidos>
-                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección
-                 <and:direccion>{direccion}</and:direccion>
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:celular>{celular}</and:celular>
-                 <and:ocupacion>{ocupacion}</and:ocupacion>
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>
-                 <and:razonsocial>{razon_social}</and:razonsocial>
-                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección
-                 <and:direccionEnt>{direccion}</and:direccionEnt>
-                 <and:cargo>{cargo}</and:cargo>
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>
-                 <and:formato>{formato}</and:formato>
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
-                 <and:soporte>{soporte_base64}</and:soporte>
-              </and:CertificateVinculacionEmpresaRequest>
+           <soapenv:Body> 
+              <and:CertificateVinculacionEmpresaRequest> 
+                 <and:tipoCert>14</and:tipoCert> 
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
+                 <and:documento>{documento}</and:documento> 
+                 <and:nombres>{nombres}</and:nombres> 
+                 <and:apellidos>{apellidos}</and:apellidos> 
+                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección 
+                 <and:direccion>{direccion}</and:direccion> 
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:celular>{celular}</and:celular> 
+                 <and:ocupacion>{ocupacion}</and:ocupacion> 
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt> 
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt> 
+                 <and:razonsocial>{razon_social}</and:razonsocial> 
+                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección 
+                 <and:direccionEnt>{direccion}</and:direccionEnt> 
+                 <and:cargo>{cargo}</and:cargo> 
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert> 
+                 <and:formato>{formato}</and:formato> 
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificateVinculacionEmpresaRequest> 
            </soapenv:Body>
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
             "Accept-Encoding": "identity"
         }
+
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
-            # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
-            print("mensaje:", mensaje)
 
             if int(estado) == 0:
-                
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio_persona,
+                    ocupacion=ocupacion,
+                    cargo=cargo,
+                    unidad_organizacional=unidad_organizacional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=14,
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -2164,139 +2309,149 @@ def radicado_com_siif(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error desconocido: {str(e)}"
         })
-
-
-
 
 def radicado_repre_legal(request):
     try:
-        # Credenciales o cabecera de autenticación
+        # Obtener cabecera de autenticación
         response = credenciales_webservice(request)
         if isinstance(response, JsonResponse):
             response_content = json.loads(response.content)
             if response_content['status'] == 'success':
                 cabecera = response_content['cabecera']
             else:
-                return response  # Si no se obtuvo credenciales válidas, devolvemos el error
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Credenciales no válidas'
+                })
+        convenios = request.user.CONVENIO.all()
+        if convenios.exists():
+            convenio = convenios.first()
+            id = convenio.id
 
         # Validar datos del formulario
-        tipo_doc = request.POST.get('tipo-documento', '')
-        documento = request.POST.get('numero-documento', '')
-        nombres = request.POST.get('nombres', '')
-        apellidos = request.POST.get('apellidos', '')
-        municipio_persona = request.POST.get('municipio-persona', None) 
-        municipio_empresa = request.POST.get('municipio-empresa', None)
-        direccion = request.POST.get('direccion', '')
-        email = request.POST.get('correo', '')
-        emailEnt = request.POST.get('correo-entidad', '')
-        celular = request.POST.get('celular', '')
-        ocupacion = request.POST.get('ocupacion', '')
-        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '')
-        documento_ent = request.POST.get('numero-documento-entidad', '')
-        razon_social = request.POST.get('razon-social', '')
-        cargo = request.POST.get('cargo', '')
-        unidad_organizacional = request.POST.get('unidad-organizacional', '')
-        fecha_cert = request.POST.get('fecha-certificado', '')
-        formato = request.POST.get('formato-entrega', '')
+        tipo_doc = request.POST.get('tipo-documento', '') 
+        documento = request.POST.get('numero-documento', '') 
+        nombres = request.POST.get('nombres', '') 
+        apellidos = request.POST.get('apellidos', '') 
+        municipio_persona = request.POST.get('municipio-persona', None)  
+        municipio_empresa = request.POST.get('municipio-empresa', None) 
+        direccion = request.POST.get('direccion', '') 
+        email = request.POST.get('correo', '') 
+        emailEnt = request.POST.get('correo-entidad', '') 
+        celular = request.POST.get('celular', '') 
+        ocupacion = request.POST.get('ocupacion', '') 
+        tipo_doc_ent = request.POST.get('tipo-documento-entidad', '') 
+        documento_ent = request.POST.get('numero-documento-entidad', '') 
+        razon_social = request.POST.get('razon-social', '') 
+        cargo = request.POST.get('cargo', '') 
+        unidad_organizacional = request.POST.get('unidad-organizacional', '') 
+        fecha_cert = request.POST.get('fecha-certificado', '') 
+        formato = request.POST.get('formato-entrega', '') 
         vigencia = request.POST.get('vigencia', '')
-        
-        
-        # Verificar campos obligatorios
-        if not (tipo_doc and documento and nombres and apellidos and direccion and email):
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Faltan datos obligatorios'
+
+        # Verificar campos obligatorios 
+        if not (tipo_doc and documento and nombres and apellidos and direccion and email): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Faltan datos obligatorios' 
             })
-        
+
         # Codificar soporte en base64 si es necesario
         soporte = request.FILES.get('documentos', None)
         if not soporte:
             return JsonResponse({
                 'status': 'error',
-                'message': 'El archivo .zip no se encontró'
+                'message': 'El archivo de soporte no se encontró'
             })
 
-        # Leer y codificar el soporte
-        contenido_zip = soporte.read()
-        soporte_zip = zipfile.ZipFile(io.BytesIO(contenido_zip))
+        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
-        if len(soporte_zip.namelist()) != 3:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El zip debe contener exactamente 3 documentos PDF'
-            })
-
-        soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
-
-        # Obtener detalles de los departamentos (si es necesario)
         # Construir el cuerpo SOAP
-
-
-
-        cuerpo_soap = f"""
+        cuerpo_soap = f"""  
         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
            <soapenv:Header>
-              {cabecera}  
+              {cabecera}
            </soapenv:Header>
-           <soapenv:Body>
-              <and:CertificateVinculacionEmpresaRequest>
-                 <and:tipoCert>8</and:tipoCert>
-                 <and:tipoDoc>{tipo_doc}</and:tipoDoc>
-                 <and:documento>{documento}</and:documento>
-                 <and:nombres>{nombres}</and:nombres>
-                 <and:apellidos>{apellidos}</and:apellidos>
-                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección
-                 <and:direccion>{direccion}</and:direccion>
-                 <and:email>{email}</and:email>
-                 <and:emailEnt>{emailEnt}</and:emailEnt>
-                 <and:celular>{celular}</and:celular>
-                 <and:ocupacion>{ocupacion}</and:ocupacion>
-                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt>
-                 <and:documentoEnt>{documento_ent}</and:documentoEnt>
-                 <and:razonsocial>{razon_social}</and:razonsocial>
-                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección
-                 <and:direccionEnt>{direccion}</and:direccionEnt>
-                 <and:cargo>{cargo}</and:cargo>
-                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional>
-                 <and:fechaCert>{fecha_cert}</and:fechaCert>
-                 <and:formato>{formato}</and:formato>
-                 <and:vigenciaCert>{vigencia}</and:vigenciaCert>
-                 <and:soporte>{soporte_base64}</and:soporte>
-              </and:CertificateVinculacionEmpresaRequest>
+           <soapenv:Body> 
+              <and:CertificateVinculacionEmpresaRequest> 
+                 <and:tipoCert>8</and:tipoCert> 
+                 <and:tipoDoc>{tipo_doc}</and:tipoDoc> 
+                 <and:documento>{documento}</and:documento> 
+                 <and:nombres>{nombres}</and:nombres> 
+                 <and:apellidos>{apellidos}</and:apellidos> 
+                 <and:municipio>{municipio_persona}</and:municipio>  # Primera selección 
+                 <and:direccion>{direccion}</and:direccion> 
+                 <and:email>{email}</and:email> 
+                 <and:emailEnt>{emailEnt}</and:emailEnt> 
+                 <and:celular>{celular}</and:celular> 
+                 <and:ocupacion>{ocupacion}</and:ocupacion> 
+                 <and:tipoDocEnt>{tipo_doc_ent}</and:tipoDocEnt> 
+                 <and:documentoEnt>{documento_ent}</and:documentoEnt> 
+                 <and:razonsocial>{razon_social}</and:razonsocial> 
+                 <and:municipioEnt>{municipio_empresa}</and:municipioEnt>  # Segunda selección 
+                 <and:direccionEnt>{direccion}</and:direccionEnt> 
+                 <and:cargo>{cargo}</and:cargo> 
+                 <and:unidadOrganizacional>{unidad_organizacional}</and:unidadOrganizacional> 
+                 <and:fechaCert>{fecha_cert}</and:fechaCert> 
+                 <and:formato>{formato}</and:formato> 
+                 <and:vigenciaCert>{vigencia}</and:vigenciaCert> 
+                 <and:soporte>{soporte_base64}</and:soporte> 
+              </and:CertificateVinculacionEmpresaRequest> 
            </soapenv:Body>
         </soapenv:Envelope>
         """
-       
+
         # Enviar la solicitud SOAP
         soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
         headers = {
             "Content-Type": "text/xml; charset=utf-8",
             "Accept-Encoding": "identity"
         }
+
         response_soap = requests.post(soap_url, data=cuerpo_soap, headers=headers)
-        print("response:",response_soap)
+
         if response_soap.status_code == 200:
-            # Analizar el XML para obtener estado y mensaje
             root = ET.fromstring(response_soap.text)
             estado = root.find('.//ns1:estado', {'ns1': 'http://www.andesscd.com.co/'}).text
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text
-            print("mensaje:", mensaje)
 
             if int(estado) == 0:
-                
+                # Guardar datos en la base de datos solo con campos esperados
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio_persona,
+                    ocupacion=ocupacion,
+                    cargo=cargo,
+                    unidad_organizacional=unidad_organizacional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                    tipo_certificado=8
+                )
+
+                datos.save()  # Guardar en la base de datos
 
                 return JsonResponse({
                     'status': 'success',
                     'message': 'Solicitud enviada correctamente',
                     'radicado': mensaje
                 })
+
             else:
                 return JsonResponse({
                     'status': 'error',
                     'message': 'Error en la solicitud SOAP'
                 })
+
         else:
             return JsonResponse({
                 'status': 'error',
@@ -2306,7 +2461,7 @@ def radicado_repre_legal(request):
     except Exception as e:
         return JsonResponse({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error desconocido: {str(e)}"
         })
 
 
