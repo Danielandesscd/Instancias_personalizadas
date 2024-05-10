@@ -1138,7 +1138,7 @@ def radicado_prof_titulado(request):
         
         ocupacion = request.POST.get('ocupacion', '')
         universidad = request.POST.get('universidad', '')
-        tituloprofesional = request.POST.get('tituloprofesional', '')
+        tituloprofesional = request.POST.get('titulos_profesionales', '')
         matriculaprofesional = request.POST.get('matricula_profesional', '')
         emisortarjetaprofesional = request.POST.get('emisortarjetaprofesional', '')
         facultad = request.POST.get('facultad', '')
@@ -1206,6 +1206,31 @@ def radicado_prof_titulado(request):
             mensaje = root.find('.//ns1:mensaje', {'ns1': 'http://www.andesscd.com.co/'}).text 
             print("mensaje:", mensaje)
             if int(estado) == 0: 
+                datos = DATOS(
+                    id_conv=id,
+                    tipo_doc=tipo_doc,
+                    nombre=nombres,
+                    apellido=apellidos,
+                    numero_doc=documento,
+                    tipo_certificado=15,
+                    correo=email,
+                    direccion=direccion,
+                    municipio=municipio,
+                    universidad=universidad,
+                    facultad=facultad,
+                    matricula_profesional=matriculaprofesional,
+                    titulo_profesional=tituloprofesional,
+                    formato_entrega=formato,
+                    vigencia=vigencia,
+                    radicado=mensaje,  # Guardar el número de radicado
+                )
+
+                datos.save()
+
+
+
+
+
                 return JsonResponse({ 
                     'status': 'success', 
                     'message': 'Solicitud enviada correctamente', 

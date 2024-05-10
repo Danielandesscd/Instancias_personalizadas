@@ -159,12 +159,11 @@
                                     <option value="">Seleccione una universidad</option> 
                                 </select>
                           </div>
-                          <div class="mb-3">
-                            <label for="tituloprofesional" class="form-label"><b>Titulo Profesional</b></label>
-                                <select id="tituloprofesional" name="tituloprofesional">
-                                    <option value="">Seleccione Titulo Profesional</option> 
-                                </select>
-                          </div>
+                          <div class="mb-3"> 
+                            <label for="titulos_profesionales" class="form-label"><b>Titulo Profesional</b></label> 
+                            <select id="titulos_profesionales" name="titulos_profesionales"> 
+                                <option value="">Seleccione Titulo Profesional</option> 
+                            </select>
                         <div class="mb-3">
                             <label for="matricula_profesional" class="form-label"><b>Matricula Profesional</b></label>
                             <input type="text" class="form-control" id="matricula_profesional" name="matricula_profesional">
@@ -188,12 +187,13 @@
                         <div class="mb-3">
                             <label for="vigencia" class="form-label"><b>Vigencia</b></label>
                             <select class="form-select" id="vigencia" name="vigencia">
-                                <option value="">1 Día</option>
-                                <option value="">1 Mes</option>
-                                <option value="">3 Meses</option>
+                                <option value="1">3 Meses</option>
                                 <option value="2">6 Meses</option>
                                 <option value="3">1 Año</option>
-                                <option value="">2 Años</option>
+                                <option value="17">14 Meses</option>
+                                <option value="21">370 Días</option>
+                                <option value="4">2 Años</option>
+                                <option value="6">Variable</option>
                             </select>
                         </div>
                         <br>
@@ -312,35 +312,34 @@
                 } 
             }); 
     
-            // Evento para cargar títulos al seleccionar una universidad 
-            $('#universidad').on('change', function() { 
-                var universidad_id = $(this).val(); // Obtener el ID de la universidad seleccionada 
-    
-                if (universidad_id) {  
-                    $.ajax({  
-                        url: `/obtener_titulos/${universidad_id}/`, // Ruta para obtener títulos (asegúrate de usar backticks para interpolación) 
-                        method: 'GET',  
-                        success: function(data) {  
-                            if (data.status === 'success') {  
-                                var titulos = data.titulos_profesionales;  
-    
-                                // Limpiar opciones excepto la opción por defecto  
-                                $('#tituloprofesional').children('option:not(:first)').remove();  
-    
-                                // Agregar nuevas opciones  
-                                titulos.forEach(function(titulo) {  
-                                    $('#tituloprofesional').append(`<option value="${titulo.id_titulo}">${titulo.nombre}</option>`); // Comillas correctas y backticks para interpolación 
-                                });  
-                            } else {  
-                                console.error('Error al obtener títulos profesionales:', data.message);  
-                            }  
-                        },  
-                        error: function() {  
-                            console.error("Error al cargar los títulos profesionales.");  
-                        }  
-                    });  
-                } 
-            });
+            $('#universidad').on('change', function() {
+    var universidad_id = $(this).val();
+    if (universidad_id) {
+        $.ajax({
+            url: `/obtener_titulos/${universidad_id}/`, // Ruta para obtener títulos
+            method: 'GET',
+            success: function(data) {
+                if (data.status === 'success') {
+                    // Obtén la lista correcta desde la respuesta
+                    var titulos = data.titulos_profesionales; // Asegúrate de usar el nombre correcto del atributo
+
+                    // Limpia las opciones excepto la primera opción por defecto
+                    $('#titulos_profesionales').children('option:not(:first)').remove();
+
+                    // Agrega nuevas opciones
+                    titulos.forEach(function(titulo) {
+                        $('#titulos_profesionales').append(`<option value="${titulo.id_icfes_tp}">${titulo.nombre}</option>`);
+                    });
+                } else {
+                    console.error('Error al obtener títulos profesionales:', data.message);
+                }
+            },
+            error: function() {
+                console.error("Error al cargar los títulos profesionales.");
+            }
+        });
+    }
+});
     
             // Función para retroceder en la historia del navegador
             function goBack() {
@@ -355,6 +354,7 @@
             }
         });
     </script>
+    
     
     
     
