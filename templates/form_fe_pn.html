@@ -311,10 +311,7 @@
                 }  
             }
     
-            // Función para retroceder en la historia del navegador
-            function goBack() {
-                window.history.back();
-            }
+            
     
             // Configuración de la barra superior basada en datos almacenados localmente
             var convenio = JSON.parse(localStorage.getItem('convenio'));
@@ -324,7 +321,14 @@
             }
         });
     </script>
-    
+
+    <script>
+        // Función para retroceder en la historia del navegador
+        function goBack() {
+                window.history.back();
+            }
+    </script>
+        
     
     <script>
         $(document).ready(function() {

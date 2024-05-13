@@ -93,7 +93,7 @@ def home(request):
 
 
 
-def plantilla_dinamica(request, convenio_id):
+def plantilla_dinamica(request, nombre):
     mapeo_tipos_certificado = {
     "10": "Facturación Electrónica - Persona Jurídica",
     "11": "Facturación Electrónica - Persona Natural",
@@ -148,7 +148,7 @@ def plantilla_dinamica(request, convenio_id):
 
 
 
-    convenio = get_object_or_404(CONVENIO, pk=convenio_id)
+    convenio = get_object_or_404(CONVENIO, nombre=nombre)
     confi_certificados = CONFI_CERTIFICADOS.objects.filter(id_convenio=convenio.id)
 
     certificados_con_nombre_y_formulario = [

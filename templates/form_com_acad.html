@@ -69,6 +69,8 @@
         <div>
             <a href="#" onclick="goBack(); return false;" class="btn btn-dark">Atrás</a>
             
+
+            
         </div>
     </div>
 </div>
@@ -319,10 +321,7 @@
                 }  
             }
     
-            // Función para retroceder en la historia del navegador
-            function goBack() {
-                window.history.back();
-            }
+            
     
             // Configuración de la barra superior basada en datos almacenados localmente
             var convenio = JSON.parse(localStorage.getItem('convenio'));
@@ -331,6 +330,13 @@
                 $('#convenio-nombre').text(convenio.nombre);
             }
         });
+    </script>
+
+    <script>
+        // Función para retroceder en la historia del navegador
+        function goBack() {
+                window.history.back();
+            }
     </script>
     
     

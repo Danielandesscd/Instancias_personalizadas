@@ -32,7 +32,7 @@
                     {% for convenio in convenios %}
                     <div class="list-group-item list-group-item-action">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{% url 'verificar_convenio' convenio.id %}">{{ convenio.nombre }}</a>
+                            <a href="{% url 'detalle_convenio' convenio.nombre %}">{{ convenio.nombre }}</a>
                         </div>
                     </div>
                     {% endfor %}
