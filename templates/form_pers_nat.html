@@ -175,6 +175,9 @@
                         </div>
                         <div class="mb-3"> 
                             <label for="documentos" class="form-label"><b>Documentos De Soporte</b></label>
+                            <p> <b>1.</b> Solicitud Notariada de Certificado Digital  <b>2.</b>Fotocopia Doc. Identidad  </p>
+                           <p><b>Adjuntar los 2 documentos en una sola carpeta en .ZIP (comprimida)</b></p>
+                            
                             <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                         </div>
                         <br>
@@ -323,22 +326,63 @@
         
                 // Obtener el objeto 'convenio' del localStorage 
                 var convenio = JSON.parse(localStorage.getItem('convenio'));  // Extraer y parsear el objeto 
-            
-                if (convenio && convenio.id) { 
-                    // Convertir el ID a número entero por seguridad 
-                    var convenioId = parseInt(convenio.id, 10);  // Convierte a entero para evitar errores de formato 
-            
-                    // Redirigir al hacer clic en el botón 'Aceptar' 
-                    $('#aceptar-button').on('click', function() { 
-                        // Asegúrate de usar la interpolación de cadenas correcta con comillas invertidas 
-                        var redirection_url = `/plantilla_dinamica/${convenioId}/`;  // URL dinámica con convenioId 
-                        window.location.href = redirection_url;  // Redirige a la URL correcta 
-                    }); 
-                } else { 
-                    console.error("No se encontró el objeto 'convenio' o no tiene un ID."); 
-                    alert("Error: No se encontró el convenio_id para redirigir."); 
-                } 
+
+                if (convenio && convenio.nombre) {
+                    // Usar el nombre directamente del objeto convenio
+                    var convenioNombre = convenio.nombre;  // Obtiene el nombre del convenio
+
+                    // Redirigir al hacer clic en el botón 'Aceptar'
+                    $('#aceptar-button').on('click', function() {
+                        // Asegúrate de usar la interpolación de cadenas correcta con comillas invertidas
+                        var redirection_url = `/plantilla_dinamica/${convenioNombre}/`;  // URL dinámica con convenioNombre
+                        window.location.href = redirection_url;  // Redirige a la URL correcta
+                    });
+                } else {
+                    console.error("No se encontró el objeto 'convenio' o no tiene un nombre.");
+                    alert("Error: No se encontró el nombre del convenio para redirigir.");
+                }
             });
+        </script>
+    <script> 
+        document.addEventListener("DOMContentLoaded", function() { 
+            const documentosInput = document.getElementById('documentos'); 
+             
+            documentosInput.addEventListener('change', function() { 
+                const archivos = this.files; 
+                const archivo = archivos[0]; // Solo tomamos el primer archivo seleccionado 
+         
+                if (!archivo) { 
+                    return; // No hay archivo seleccionado 
+                } 
+         
+                if (!archivo.name.endsWith('.zip')) { 
+                    alert("Este archivo no es .Zip, Por favor asegúrate de adjuntar archivos .zip."); 
+                    this.value = ''; // Limpiamos el valor del campo para permitir una nueva selección 
+                    return; 
+                } 
+         
+                // Validar contenido del archivo zip 
+                const zip = new JSZip(); 
+                zip.loadAsync(archivo).then(function(zipFile) { 
+                    const nombresArchivos = Object.keys(zipFile.files); 
+                    const numArchivos = nombresArchivos.filter(function(nombreArchivo) { 
+                        // Filtramos solo los archivos regulares (no directorios) 
+                        return !zipFile.files[nombreArchivo].dir; 
+                    }).length; 
+         
+                    if (numArchivos !== 2) { 
+                        alert("El archivo .zip debe contener exactamente dos documentos."); 
+                        documentosInput.value = ''; // Limpiamos el valor del campo 
+                    } else { 
+                        alert("Archivo .zip válido con dos documentos."); 
+                    } 
+                }).catch(function(error) { 
+                    console.error('Error al cargar el archivo .zip', error); 
+                    alert("Ocurrió un error al cargar el archivo .zip."); 
+                    documentosInput.value = ''; // Limpiamos el valor del campo 
+                }); 
+            }); 
+        }); 
         </script>
         
         

@@ -89,6 +89,9 @@ def home(request):
     convenios = CONVENIO.objects.all()
     return render(request, 'home.html', {'convenios': convenios})
 
+def imagen_banner(request):
+    convenios = CONVENIO.objects.all()  # Obtén todos los convenios de la base de datos
+    return render(request, 'plantilla_convenio.html', {'convenios': convenios})
 
 
 
@@ -849,15 +852,38 @@ def radicado_pers_nat(request):
         })
     
     # Leer el archivo .zip y convertir a base64
-    soporte = request.FILES.get('documentos', None)
-    
-    if not soporte:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'El archivo .zip no se encontró'
-        })
-    
+    soporte = request.FILES.get('documentos', None)  
+     
+    if not soporte: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'El archivo .zip no se encontró' 
+        }) 
     contenido_zip = soporte.read()
+     
+    # Verificar si el archivo es un .zip 
+    if not soporte.name.endswith('.zip'): 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+        }) 
+ 
+    # Verificar que el .zip contenga exactamente dos archivos 
+    try: 
+        with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+            lista_archivos = zip_ref.namelist() 
+            if len(lista_archivos) != 2: 
+                return JsonResponse({ 
+                    'status': 'error', 
+                    'message': 'El archivo .zip debe contener exactamente 2 documentos.Verifica e intenta Nuevamente' 
+                }) 
+    except zipfile.BadZipFile: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+        }) 
+     
+    
     soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
     # Construir el cuerpo SOAP
@@ -999,16 +1025,39 @@ def radicado_pers_nat_rut(request):
         })
 
     # Codificar el soporte en base64 si corresponde
-    soporte = request.FILES.get('documentos', None)  # Campo que contiene el archivo
-
-    if not soporte:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'El archivo .zip no se encontró'
-        })
-
-    # Leer el contenido del archivo .zip y convertir a base64
+    soporte = request.FILES.get('documentos', None) 
+     
+    if not soporte: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'El archivo .zip no se encontró' 
+        }) 
     contenido_zip = soporte.read()
+     
+    # Verificar si el archivo es un .zip 
+    if not soporte.name.endswith('.zip'): 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+        }) 
+ 
+    # Verificar que el .zip contenga exactamente dos archivos 
+    try: 
+        with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+            lista_archivos = zip_ref.namelist() 
+            if len(lista_archivos) != 1: 
+                return JsonResponse({ 
+                    'status': 'error', 
+                    'message': 'El archivo .zip debe contener exactamente 1 documento.Verifica e intenta Nuevamente' 
+                }) 
+    except zipfile.BadZipFile: 
+        return JsonResponse({ 
+            'status': 'error', 
+            'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+        }) 
+     
+   
+
     soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
     # Construir el cuerpo SOAP
@@ -1148,12 +1197,38 @@ def radicado_prof_titulado(request):
             return JsonResponse({'status': 'error', 'message': 'Faltan datos obligatorios'})
 
         # Codificar soporte en base64 si corresponde
-        soporte = request.FILES.get('documentos', None)
-
-        if not soporte:
-            return JsonResponse({'status': 'error', 'message': 'El archivo .zip no se encontró'})
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 2: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 2 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
         # Construir el cuerpo SOAP
@@ -1302,15 +1377,38 @@ def radicado_pert_empresa(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo .zip no se encontró'
-            })
-
-        # Leer y codificar el soporte
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
         contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
         # Construir el cuerpo SOAP
@@ -1457,15 +1555,38 @@ def radicado_fun_publica(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo .zip no se encontró'
-            })
-
-        # Leer y codificar el soporte
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
         contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
         # Construir el cuerpo SOAP
@@ -1612,15 +1733,38 @@ def radicado_perso_juridica(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo .zip no se encontró'
-            })
-
-        # Leer y codificar el soporte
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
         contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
         # Construir el cuerpo SOAP
@@ -1770,14 +1914,38 @@ def radicado_fe_natural(request):
             })
 
         # Codificar soporte en base64 si corresponde
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo de soporte no se encontró'
-            })
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
         # Construir el cuerpo SOAP
@@ -1926,14 +2094,38 @@ def radicado_fe_juridica(request):
             })
 
         # Codificar soporte en base64 si corresponde
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo de soporte no se encontró'
-            })
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
         # Construir el cuerpo SOAP
@@ -2079,14 +2271,38 @@ def radicado_com_academica(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo de soporte no se encontró'
-            })
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
         # Construir el cuerpo SOAP
@@ -2232,14 +2448,38 @@ def radicado_com_siif(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo de soporte no se encontró'
-            })
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
         # Construir el cuerpo SOAP
@@ -2384,14 +2624,38 @@ def radicado_repre_legal(request):
             })
 
         # Codificar soporte en base64 si es necesario
-        soporte = request.FILES.get('documentos', None)
-        if not soporte:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'El archivo de soporte no se encontró'
-            })
-
-        contenido_zip = soporte.read()  # Leer todo el contenido del archivo
+        soporte = request.FILES.get('documentos', None) 
+     
+        if not soporte: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo .zip no se encontró' 
+            }) 
+        contenido_zip = soporte.read()
+        
+        # Verificar si el archivo es un .zip 
+        if not soporte.name.endswith('.zip'): 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
+            }) 
+    
+        # Verificar que el .zip contenga exactamente dos archivos 
+        try: 
+            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
+                lista_archivos = zip_ref.namelist() 
+                if len(lista_archivos) != 3: 
+                    return JsonResponse({ 
+                        'status': 'error', 
+                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
+                    }) 
+        except zipfile.BadZipFile: 
+            return JsonResponse({ 
+                'status': 'error', 
+                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
+            }) 
+        
+        
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
 
         # Construir el cuerpo SOAP

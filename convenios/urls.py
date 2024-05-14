@@ -40,7 +40,7 @@ urlpatterns = [
     path('instancia/<str:nombre_empresa>/', views.instancia_empresa, name='instancia'),
     #path('plantilla_dinamica/<int:convenio_id>/', views.plantilla_dinamica, name='detalle_convenio'),
     path('plantilla_dinamica/<str:nombre>/', views.plantilla_dinamica, name='detalle_convenio'),
-    path('plantilla_convenio/<int:id>/', views.plantilla_convenio, name='plantilla_convenio'),
+    path('plantilla_convenio/<str:nombre>/', views.plantilla_convenio, name='plantilla_convenio'),
     path('login_instancia/<int:convenio_id>/', views.login_instancia, name='login_instancia'),
     path('formulario_certificado/<int:id_convenio>/', views.formulario_certificado, name='formulario_certificado'),
     path('guardar_certificado/', views.guardar_certificado, name='guardar_certificado'),
@@ -63,6 +63,7 @@ urlpatterns = [
     path('radicado_com_academica/', views.radicado_com_academica, name='radicado_com_academica'),
     path('radicado_com_siif/', views.radicado_com_siif, name='radicado_com_siif'),
     path('radicado_repre_legal/', views.radicado_repre_legal, name='radicado_repre_legal'),
+    path('imagen_banner/', views.imagen_banner, name='imagen_banner'),
 
 
 ]
