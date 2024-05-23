@@ -57,13 +57,13 @@
         <div class="row">
             <div class="col-10 col-sm-8 col-md-8 col-lg-6 mx-auto">
                 <div class="d-flex justify-content-between align-items-center mt-5">
-                    <h2 class="mb-0"><b>Campos de formulario</b></h2>
+                    <h2 class="mb-0"><strong>Campos de formulario</strong></h2>
                     <a href="{% url 'home' %}" class="btn btn-primary">Atrás</a>
                 </div>
                 <br><br>
                 <form>
                     <div class="mb-3">
-                        <label for="tipo-certificado" class="form-label"><b>Tipo de Certificado</b></label>
+                        <label for="tipo-certificado" class="form-label"><strong>Tipo de Certificado</strong></label>
                         <select class="form-select" id="tipo-certificado" name="tipo-certificado">
                             <option value="persona-juridica">Persona Jurídica</option>
                             <option value="persona-natural">Persona Natural</option>
@@ -73,7 +73,7 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="tipo-documento" class="form-label"><b>Tipo de Documento</b></label>
+                        <label for="tipo-documento" class="form-label"><strong>Tipo de Documento</strong></label>
                         <select class="form-select" id="tipo-documento" name="tipo-documento">
                             <option value="cc">CC</option>
                             <option value="nit">CE</option>
@@ -82,39 +82,39 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="numero-documento" class="form-label"><b>Número de Documento</b></label>
+                        <label for="numero-documento" class="form-label"><strong>Número de Documento</strong></label>
                         <input type="text" class="form-control" id="numero-documento" name="numero-documento">
                     </div>
                     <div class="mb-3">
-                        <label for="nombres" class="form-label"><b>Nombres</b></label>
+                        <label for="nombres" class="form-label"><strong>Nombres</strong></label>
                         <input type="text" class="form-control" id="nombres" name="nombres">
                     </div>
                     <div class="mb-3">
-                        <label for="apellidos" class="form-label"><b>Apellidos</b></label>
+                        <label for="apellidos" class="form-label"><strong>Apellidos</strong></label>
                         <input type="text" class="form-control" id="apellidos" name="apellidos">
                     </div>
                     <div class="mb-3">
-                        <label for="razon-social" class="form-label"><b>Razón Social</b></label>
+                        <label for="razon-social" class="form-label"><strong>Razón Social</strong></label>
                         <input type="text" class="form-control" id="razon-social" name="razon-social">
                     </div>
                     <div class="mb-3">
-                        <label for="documento-entidad" class="form-label"><b>Documento de la Entidad</b></label>
+                        <label for="documento-entidad" class="form-label"><strong>Documento de la Entidad</strong></label>
                         <input type="text" class="form-control" id="documento-entidad" name="documento-entidad">
                     </div>
                     <div class="mb-3">
-                        <label for="numero-celular" class="form-label"><b>Número de Celular</b></label>
+                        <label for="numero-celular" class="form-label"><strong>Número de Celular</strong></label>
                         <input type="text" class="form-control" id="numero-celular" name="numero-celular">
                     </div>
                     <div class="mb-3">
-                        <label for="correo" class="form-label"><b>Correo Electrónico</b></label>
+                        <label for="correo" class="form-label"><strong>Correo Electrónico</strong></label>
                         <input type="email" class="form-control" id="correo" name="correo">
                     </div>
                     <div class="mb-3">
-                        <label for="correo-entidad" class="form-label"><b>Correo de la Entidad</b></label>
+                        <label for="correo-entidad" class="form-label"><strong>Correo de la Entidad</strong></label>
                         <input type="email" class="form-control" id="correo-entidad" name="correo-entidad">
                     </div>
                     <div class="mb-3">
-                        <label for="departamento" class="form-label"><b>Departamento</b></label>
+                        <label for="departamento" class="form-label"><strong>Departamento</strong></label>
                         <select class="form-select" id="departamento" name="departamento_id">
                             {% for departamento in departamentos %}
                                 <option value="{{ departamento.id }}">{{ departamento.nombre }}</option>
@@ -124,21 +124,21 @@
                     
                     <!-- Campo Municipio -->
                     <div class="mb-3">
-                        <label for="municipio" class="form-label"><b>Municipio</b></label>
+                        <label for="municipio" class="form-label"><strong>Municipio</strong></label>
                         <select class="form-select" id="municipio" name="municipio">
                             <!-- Los municipios se llenarán dinámicamente con JavaScript -->
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="direccion" class="form-label"><b>Dirección</b></label>
+                        <label for="direccion" class="form-label"><strong>Dirección</strong></label>
                         <input type="text" class="form-control" id="direccion" name="direccion">
                     </div>
                     <div class="mb-3">
-                        <label for="fecha-certificado" class="form-label"><b>Fecha de Certificado</b></label>
+                        <label for="fecha-certificado" class="form-label"><strong>Fecha de Certificado</strong></label>
                         <input type="date" class="form-control" id="fecha-certificado" name="fecha-certificado">
                     </div>
                     <div class="mb-3">
-                        <label for="vigencia" class="form-label"><b>Vigencia</b></label>
+                        <label for="vigencia" class="form-label"><strong>Vigencia</strong></label>
                         <select class="form-select" id="vigencia" name="vigencia">
                             <option value="1-dia">1 Día</option>
                             <option value="1-mes">1 Mes</option>
@@ -149,15 +149,15 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="cargo" class="form-label"><b>Cargo en la Empresa</b></label>
+                        <label for="cargo" class="form-label"><strong>Cargo en la Empresa</strong></label>
                         <input type="text" class="form-control" id="cargo" name="cargo">
                     </div>
                     <div class="mb-3">
-                        <label for="unidad-organizacional" class="form-label"><b>Unidad Organizacional</b></label>
+                        <label for="unidad-organizacional" class="form-label"><strong>Unidad Organizacional</strong></label>
                         <input type="text" class="form-control" id="unidad-organizacional" name="unidad-organizacional">
                     </div>
                     <div class="mb-3">
-                        <label for="formato-entrega" class="form-label"><b>Formato de Entrega</b></label>
+                        <label for="formato-entrega" class="form-label"><strong>Formato de Entrega</strong></label>
                         <select class="form-select" id="formato-entrega" name="formato-entrega">
                             <option value="token-fisico">Token Físico</option>
                             <option value="token-virtual">Token Virtual</option>
@@ -165,7 +165,7 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="documentos" class="form-label"><b>Documentos</b></label>
+                        <label for="documentos" class="form-label"><strong>Documentos</strong></label>
                         <input type="file" class="form-control" id="documentos" name="documentos" multiple>
                     </div>
                     <br></br>

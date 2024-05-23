@@ -13,6 +13,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.inicio, name='inicio'),
+    path('cerrar_sesion/', views.cerrar_sesion, name='cerrar_sesion'),
     path('obtener_departamentos/', views.obtener_departamentos, name='obtener_departamentos'),
     path('obtener_municipios/<int:departamento_id>/', views.obtener_municipios, name='obtener_municipios'),
     path('instancias', views.instancia, name='instancia'),
@@ -64,6 +65,7 @@ urlpatterns = [
     path('radicado_com_siif/', views.radicado_com_siif, name='radicado_com_siif'),
     path('radicado_repre_legal/', views.radicado_repre_legal, name='radicado_repre_legal'),
     path('imagen_banner/', views.imagen_banner, name='imagen_banner'),
+    path('obtener_docs/', views.obtener_docs, name='obtener_docs'),
 
 
 ]

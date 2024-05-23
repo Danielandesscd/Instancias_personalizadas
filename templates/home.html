@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json"></script>
     <title>Home</title>
-    <form action="{% url 'cerrar_sesion' %}" method="post">
+    
         {% csrf_token %}
 </head>
 
@@ -46,9 +46,12 @@
 
 <body>
     <div id="cont-principal" class="container">
-        <div id="btn-cerrar-sesion-container" class="d-flex justify-content-end mb-4" style="position: relative; top: 80px;">
-            <a href="{% url 'cerrar_sesion' %}" class="btn btn-primary btn-cerrar-sesion mb-2">Cerrar Sesión</a>  
-        </div>
+        <form id="form-cerrar-sesion" action="{% url 'cerrar_sesion' %}" method="post"> 
+            {% csrf_token %} 
+            <div id="btn-cerrar-sesion-container" class="d-flex justify-content-end mb-4" style="position: relative; top: 80px;"> 
+                <button type="submit" class="btn btn-primary btn-cerrar-sesion mb-2">Cerrar Sesión</button>   
+            </div> 
+        </form>
         
         <img id="logo" src="https://www.andesscd.com.co/wp-content/uploads/2023/02/Firma.gif" alt="andesSCD" width="250" height="180">
         
@@ -76,7 +79,7 @@
             </div>
             
             <footer class="mt-4">
-                Ac 26 # 69c 03 Torre B Of 701 Edificio Capital Center II <br> Bogotá, Colombia | PBX +601 241 5539 <br> <b>AndesSCD <i class="bi bi-c-circle"></i></b> Todos los derechos reservados
+                Ac 26 # 69c 03 Torre B Of 701 Edificio Capital Center II <br> Bogotá, Colombia | PBX +601 241 5539 <br> <strong>AndesSCD <em class="bi bi-c-circle"></em></strong> Todos los derechos reservados
             </footer>
         </div>
     </div>

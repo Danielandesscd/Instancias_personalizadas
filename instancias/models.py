@@ -78,6 +78,9 @@ class CONVENIO(models.Model):
     color_secundario = models.CharField(max_length=100)
     id_vigenica = models.IntegerField(null=True)
     id_user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='CONVENIO')
+    
+    
+    usuario_convenio=models.CharField(max_length=100)
 
     imagen_banner = models.ImageField(upload_to='banners/', blank=True, null=True)
     contraseña_convenio = models.TextField(blank=True, null=True)

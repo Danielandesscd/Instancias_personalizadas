@@ -41,9 +41,13 @@ from django.http import HttpResponseRedirect
 import io
 import base64
 import zipfile
+from django.views.decorators.cache import never_cache
+from django.shortcuts import redirect
+from django.urls import reverse
 
 
 
+@never_cache  
 def inicio(request):
     if request.method == 'POST':
         username = request.POST.get('usuario')
@@ -59,6 +63,14 @@ def inicio(request):
     else:
 
         return render(request, 'inicio.html')
+
+    
+
+
+def cerrar_sesion(request): 
+    if request.user.is_authenticated: 
+        logout(request)  # Cierra la sesión del usuario actual 
+    return redirect('inicio')
     
 
 def login_instancia(request):
@@ -73,7 +85,7 @@ def login_instancia(request):
     else:
         return render(request, 'login_instancia.html')
     
-    
+
 def plantilla_convenio(request, id):
     convenio = get_object_or_404(CONVENIO, id=id)
     return render(request, 'plantilla_convenio.html', {'convenio': convenio})
@@ -84,7 +96,8 @@ def detalle_convenio(request, convenio_id):
     return render(request, 'plantilla_convenio.html', {'convenio': convenio})
 
 
-
+@never_cache
+@login_required 
 def home(request):
     convenios = CONVENIO.objects.all()
     return render(request, 'home.html', {'convenios': convenios})
@@ -336,9 +349,11 @@ def crear_instancia(request):
         id_vigenica = request.POST.get('id_vigenica')
         imagen_banner = request.FILES.get('imagenBanner')
         usuario_weservice = request.POST.get('usuario_weservice')
+        usuario_convenio=request.POST.get('usuario_convenio')
         contraseña_webservice = request.POST.get('contraseña_webservice')
         contraseña_convenio = request.POST.get('contraseña')
-        
+       
+
 
         contraseña_convenio_encriptada = make_password(contraseña_convenio)
         print("Contenido de request.POST:", request.POST)
@@ -394,7 +409,7 @@ def crear_instancia(request):
         formatos_entrega_permi = ','.join(filter(None, [token_virtual, token_fisico, pkcs10]))
 
 
-        user = User.objects.create_user(username=usuario_weservice, password=contraseña_webservice)
+        user = User.objects.create_user(username=usuario_convenio, password=contraseña_convenio)
 
 
         convenio = CONVENIO.objects.create(
@@ -414,7 +429,9 @@ def crear_instancia(request):
             o_otp_permi=o_otp_permi,
             vigencias_permi=vigencias_permi,
             formatos_entrega_permi=formatos_entrega_permi,
-            id_user = user
+            id_user = user,
+            usuario_convenio=usuario_convenio
+
         )
 
         
@@ -631,6 +648,76 @@ def obtener_departamentos(request):
         'status': 'error', 
         'message': 'Error al obtener los departamentos' 
     })
+
+
+def obtener_docs(request):
+    # Obtener el ID del tipo de certificado del formulario
+    id_certificado = request.POST.get('id_certificado')  # Asumiendo que se envía como POST
+
+    # Obtener credenciales del servidor
+    response_credenciales = credenciales_webservice(request)  # Función que obtiene las credenciales
+
+    if isinstance(response_credenciales, JsonResponse):
+        response_content = json.loads(response_credenciales.content)
+
+        if response_content['status'] == 'success':
+            cabecera = response_content['cabecera']
+
+            # Construir la solicitud SOAP para obtener documentos
+            cuerpo_soap_documentos = f"""
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:and="http://www.andesscd.com.co/">
+                <soapenv:Header>
+                    {cabecera}
+                </soapenv:Header>
+                <soapenv:Body>
+                    <and:ListarDocumentosCertificadoRequest>
+                        <and:idtipocertificado>{id_certificado}</and:idtipocertificado>
+                    </and:ListarDocumentosCertificadoRequest>
+                </soapenv:Body>
+            </soapenv:Envelope>
+            """
+
+            soap_url = "https://ra.andesscd.com.co/test/WebService/soap-server_new.php"
+            headers = {
+                "Content-Type": "text/xml; charset=utf-8",
+            }
+
+            # Realizar la solicitud SOAP para obtener documentos
+            response_soap_documentos = requests.post(soap_url, data=cuerpo_soap_documentos, headers=headers)
+
+            # Procesar la respuesta SOAP
+            root_documentos = ET.fromstring(response_soap_documentos.text) 
+            documentos_response = root_documentos.find(".//ns1:ListarDocumentosCertificadoResponse", namespaces={ 
+                'ns1': 'http://www.andesscd.com.co/' 
+            }) 
+
+            documentos = []
+
+            if documentos_response is not None: 
+                for item in documentos_response.findall(".//ns1:mensaje", namespaces={ 
+                    'ns1': 'http://www.andesscd.com.co/' 
+                }): 
+                    mensajes = json.loads(item.text) 
+                    nombres_documentos = [d['nombre'] for d in mensajes]
+                    # Crear una lista enumerada con los nombres de los documentos
+                    documentos = [nombre for nombre in nombres_documentos]
+                    print("documentos enumerados:", documentos)
+            else:
+                # Registrar un mensaje si no se encuentra la respuesta esperada
+                print("No se encontró 'ListarDocumentosCertificadoResponse' en la respuesta SOAP.")
+            
+            return JsonResponse({ 
+                'status': 'success', 
+                'documentos': documentos
+            }) 
+ 
+    return JsonResponse({ 
+        'status': 'error', 
+        'message': 'Error al obtener los departamentos o documentos' 
+    })
+
+
+
 
 def obtener_municipios(request, departamento_id): 
     # Obtener credenciales SOAP  
@@ -861,28 +948,7 @@ def radicado_pers_nat(request):
         }) 
     contenido_zip = soporte.read()
      
-    # Verificar si el archivo es un .zip 
-    if not soporte.name.endswith('.zip'): 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-        }) 
- 
-    # Verificar que el .zip contenga exactamente dos archivos 
-    try: 
-        with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-            lista_archivos = zip_ref.namelist() 
-            if len(lista_archivos) != 2: 
-                return JsonResponse({ 
-                    'status': 'error', 
-                    'message': 'El archivo .zip debe contener exactamente 2 documentos.Verifica e intenta Nuevamente' 
-                }) 
-    except zipfile.BadZipFile: 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-        }) 
-     
+   
     
     soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
@@ -964,7 +1030,8 @@ def radicado_pers_nat(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
         
         except ET.ParseError:
@@ -1034,27 +1101,7 @@ def radicado_pers_nat_rut(request):
         }) 
     contenido_zip = soporte.read()
      
-    # Verificar si el archivo es un .zip 
-    if not soporte.name.endswith('.zip'): 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-        }) 
- 
-    # Verificar que el .zip contenga exactamente dos archivos 
-    try: 
-        with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-            lista_archivos = zip_ref.namelist() 
-            if len(lista_archivos) != 1: 
-                return JsonResponse({ 
-                    'status': 'error', 
-                    'message': 'El archivo .zip debe contener exactamente 1 documento.Verifica e intenta Nuevamente' 
-                }) 
-    except zipfile.BadZipFile: 
-        return JsonResponse({ 
-            'status': 'error', 
-            'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-        }) 
+   
      
    
 
@@ -1132,7 +1179,8 @@ def radicado_pers_nat_rut(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         except ET.ParseError:
@@ -1206,27 +1254,6 @@ def radicado_prof_titulado(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 2: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 2 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
@@ -1315,7 +1342,8 @@ def radicado_prof_titulado(request):
             else: 
                 return JsonResponse({ 
                     'status': 'error', 
-                    'message': 'Error en la solicitud SOAP' 
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 }) 
 
         else: 
@@ -1386,27 +1414,6 @@ def radicado_pert_empresa(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
@@ -1491,7 +1498,8 @@ def radicado_pert_empresa(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -1564,28 +1572,7 @@ def radicado_fun_publica(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
-        
+       
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
 
@@ -1671,7 +1658,8 @@ def radicado_fun_publica(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -1742,27 +1730,7 @@ def radicado_perso_juridica(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
+        
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')
@@ -1848,7 +1816,8 @@ def radicado_perso_juridica(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -1923,27 +1892,6 @@ def radicado_fe_natural(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
@@ -2028,7 +1976,8 @@ def radicado_fe_natural(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -2103,27 +2052,7 @@ def radicado_fe_juridica(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
+        
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
@@ -2208,7 +2137,8 @@ def radicado_fe_juridica(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -2280,27 +2210,6 @@ def radicado_com_academica(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
@@ -2385,7 +2294,8 @@ def radicado_com_academica(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -2457,27 +2367,7 @@ def radicado_com_siif(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
+        
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
@@ -2562,7 +2452,8 @@ def radicado_com_siif(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:
@@ -2633,27 +2524,6 @@ def radicado_repre_legal(request):
             }) 
         contenido_zip = soporte.read()
         
-        # Verificar si el archivo es un .zip 
-        if not soporte.name.endswith('.zip'): 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'Por favor, asegúrate de adjuntar archivos .zip.' 
-            }) 
-    
-        # Verificar que el .zip contenga exactamente dos archivos 
-        try: 
-            with zipfile.ZipFile(soporte, 'r') as zip_ref: 
-                lista_archivos = zip_ref.namelist() 
-                if len(lista_archivos) != 3: 
-                    return JsonResponse({ 
-                        'status': 'error', 
-                        'message': 'El archivo .zip debe contener exactamente 3 documentos.Verifica e intenta Nuevamente' 
-                    }) 
-        except zipfile.BadZipFile: 
-            return JsonResponse({ 
-                'status': 'error', 
-                'message': 'El archivo adjuntado no es un archivo .zip válido.' 
-            }) 
         
         
         soporte_base64 = base64.b64encode(contenido_zip).decode('utf-8')  # Convertir a base64
@@ -2738,7 +2608,8 @@ def radicado_repre_legal(request):
             else:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Error en la solicitud SOAP'
+                    'message': 'Error en la solicitud SOAP',
+                    'message': mensaje
                 })
 
         else:

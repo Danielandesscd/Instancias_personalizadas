@@ -1,0 +1,6 @@
+projectKey=instancias
+serverUrl=http://localhost:9000
+serverVersion=7.9.6.41879
+dashboardUrl=http://localhost:9000/dashboard?id=instancias
+ceTaskId=AY-cKJYqvjKzviHweEuJ
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AY-cKJYqvjKzviHweEuJ

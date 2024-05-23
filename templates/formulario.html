@@ -136,6 +136,7 @@
 
 
 
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -152,7 +153,7 @@
             <form method="POST" action="/crear_instancia/" enctype="multipart/form-data">
                 {% csrf_token %}
                 <fieldset style="border: 1px solid #bbbaba; padding: 10px;"> 
-                    <legend><b>Razón Social</b></legend>  
+                    <legend><strong>Razón Social</strong></legend>  
                     <div class="form-group">
                         <input type="text" class="form-control" id="nombre" name="nombre" required> 
                     </div>  
@@ -161,7 +162,7 @@
 
                 
                 <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
-                    <legend><b>Seleccione Operaciones De certificado</b></legend>
+                    <legend><strong>Seleccione Operaciones De certificado</strong></legend>
                     <div class="form-group">
                         <div class="form-check">
                             <input class="form-check-input" name="consultar_certificado"type="checkbox" value="1" id="flexCheckDefault">
@@ -191,7 +192,7 @@
                 </fieldset>
                <br>
                <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
-                <legend><b>Seleccione Operaciones De Firmado</b></legend>
+                <legend><strong>Seleccione Operaciones De Firmado</strong></legend>
                 <div class="form-group">
                     <div class="form-check">
                         <input class="form-check-input" name="firmar_documento" type="checkbox" value="1" id="flexCheckDefault">
@@ -209,7 +210,7 @@
             </fieldset>
             <br>
             <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
-                <legend><b>Seleccione Operaciones De OTP</b></legend>
+                <legend><strong>Seleccione Operaciones De OTP</strong></legend>
                 <div class="form-group">
                     <div class="form-check">
                         <input class="form-check-input"name="cambiar_otp" type="checkbox" value="1" id="flexCheckDefault">
@@ -233,23 +234,23 @@
             </fieldset>
             <br>
             <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
-                <legend><b>Datos Web Service</b></legend>
+                <legend><strong>Datos Web Service</strong></legend>
                 <div class="form-group">
-                    <label for="usuario_weservice"><b>Usuario Web Service:</b></label>
-                    <input type="text" class="form-control" id="usuario_weservice" name="usuario_weservice"> 
+                    <label for="usuario_weservice"><strong>Usuario Web Service:</strong></label>
+                    <input type="text" class="form-control" id="usuario_weservice" name="usuario_weservice" required> 
                 </div>
                 <div class="form-group">
-                    <label for="contraseña_webservice"><b>Contraseña Web Service:</b></label>
-                    <input type="password" class="form-control" id="contraseña_webservice" name="contraseña_webservice"> 
+                    <label for="contraseña_webservice"><strong>Contraseña Web Service:</strong></label>
+                    <input type="password" class="form-control" id="contraseña_webservice" name="contraseña_webservice" required> 
                 </div>
             </fieldset>
             <br>
               <div class="form-group">
-                <label for="logo"><b>Cargar Logo de la Empresa:</b></label>
+                <label for="logo"><strong>Cargar Logo de la Empresa:</strong></label>
                 <input type="file" class="form-control-file" id="logo" name="logo" accept="image/*">
               </div>
               <div class="form-group">
-                <label for="requiereBanner"><b>¿Requiere Banner Corporativo?</b></label>
+                <label for="requiereBanner"><strong>¿Requiere Banner Corporativo?</strong></label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="flexRadio" id="flexRadioDefault3">
                     <label class="form-check-label" for="flexRadioDefault3">
@@ -266,23 +267,23 @@
             
             <div id="campos-banner" class="form-group" style="display: none;">
                 <div class="form-group campos-banner">
-                    <label for="imagenBanner"><b>Cargar Banner Corporativo:</b></label>
+                    <label for="imagenBanner"><strong>Cargar Banner Corporativo:</strong></label>
                     <input type="file" class="form-control-file" id="imagenBanner" name="imagenBanner">
                 </div>
             </div>
             
             
               <div class="form-group">
-                <label for="colorPrimario"><b>Color Primario:</b></label>
+                <label for="colorPrimario"><strong>Color Primario:</strong></label>
                 <input type="color" class="form-control" id="colorPrimario" name="colorPrimario">
               </div>
               <div class="form-group">
-                <label for="colorSecundario"><b>Color Secundario:</b></label>
+                <label for="colorSecundario"><strong>Color Secundario:</strong></label>
                 <input type="color" class="form-control" id="colorSecundario" name="colorSecundario">
               </div>
               <fieldset style="border: 1px solid #bbbaba; padding: 10px;">
               <div class="form-group">
-                <label for="requiereContraseña"><b>¿Requiere Contraseña de Autenticación?</b></label>
+                <label for="requiereContraseña"><strong>¿Requiere Contraseña de Autenticación?</strong></label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
 
@@ -298,12 +299,16 @@
                   </div>
               </div>
             </fieldset>
+            <div class="form-group campos-contraseña" style="display: none;"> 
+                <label for="Usuario"><b>Usuario:</b></label> 
+                <input type="text" class="form-control" id="usuario_convenio" name="usuario_convenio"> 
+            </div>
             <div class="form-group campos-contraseña" style="display: none;">
-                <label for="contraseña"><b>Contraseña:</b></label>
+                <label for="contraseña"><strong>Contraseña:</strong></label>
                 <input type="password" class="form-control" id="contraseña" name="contraseña">
             </div>
             <div class="form-group campos-contraseña" style="display: none;">
-                <label for="confirmarContraseña"><b>Confirmar Contraseña:</b></label>
+                <label for="confirmarContraseña"><strong>Confirmar Contraseña:</strong></label>
                 <input type="password" class="form-control" id="confirmarContraseña" name="confirmarContraseña" onkeyup="checkPasswordMatch()">
                 <div id="mensajeError" style="display: none; color: red;">Las contraseñas no coinciden</div>
             </div>
@@ -319,6 +324,19 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script> 
+    document.querySelector('form').addEventListener('submit', function(event) { 
+        var usuarioInput = document.getElementById('usuario_weservice'); 
+        var contraseñaInput = document.getElementById('contraseña_webservice'); 
+        var mensajeError = document.getElementById('mensajeError'); 
+ 
+        if (usuarioInput.value.trim() === '' || contraseñaInput.value.trim() === '') { 
+            event.preventDefault(); // Evita que se envíe el formulario si los campos están vacíos 
+            mensajeError.style.display = 'block'; // Muestra un mensaje de error 
+        } 
+    }); 
+</script>
 
 </body>
 </html>
